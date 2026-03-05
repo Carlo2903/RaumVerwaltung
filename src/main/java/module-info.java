@@ -3,6 +3,6 @@ module com.example.raumverwaltung {
     requires javafx.fxml;
 
 
-    opens com.example.raumverwaltung to javafx.fxml;
-    exports com.example.raumverwaltung;
+    opens de.fhswf.raumverwaltung to javafx.fxml;
+    exports de.fhswf.raumverwaltung;
 }

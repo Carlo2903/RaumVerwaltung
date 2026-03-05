@@ -1,4 +1,4 @@
-package com.example.raumverwaltung;
+package de.fhswf.raumverwaltung;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
