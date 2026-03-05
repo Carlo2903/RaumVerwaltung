@@ -7,6 +7,14 @@
     <persistence-unit name="SchulPlanerPU">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
+        <class>de.fhswf.raumverwaltung.db.entities.Erziehungsberechtigte</class>
+        <class>de.fhswf.raumverwaltung.db.entities.Fach</class>
+        <class>de.fhswf.raumverwaltung.db.entities.Klasse</class>
+        <class>de.fhswf.raumverwaltung.db.entities.Lehrkraft</class>
+        <class>de.fhswf.raumverwaltung.db.entities.Raum</class>
+        <class>de.fhswf.raumverwaltung.db.entities.Schueler</class>
+        <class>de.fhswf.raumverwaltung.db.entities.StundenplanEintrag</class>
+
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/schulmanagement_db"/>
