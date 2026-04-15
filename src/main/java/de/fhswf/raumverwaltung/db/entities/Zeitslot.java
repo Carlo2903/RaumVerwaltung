@@ -2,21 +2,23 @@ package de.fhswf.raumverwaltung.db.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalTime;
 
 @Entity
-@Table(name = "raum")
+@Table(name = "zeitslot")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Raum {
+public class Zeitslot {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private String bezeichnung;
+	private int stundenNummer; // z.B. 1, 2, 3...
 
 	@Enumerated(EnumType.STRING)
-	private RaumTyp raumtyp;
+	private Wochentag wochentag;
 
-	private int kapazitaet;
+	private LocalTime startzeit;
+	private LocalTime endzeit;
 }

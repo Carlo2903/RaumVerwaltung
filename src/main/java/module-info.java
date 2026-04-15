@@ -7,6 +7,7 @@ module com.example.raumverwaltung {
     // 1. NEU: Sag dem Projekt, dass es JPA und Hibernate nutzen soll
     requires jakarta.persistence;
     requires org.hibernate.orm.core;
+    requires static lombok;
 
     // 2. NEU: Der VIP-Pass für Hibernate! Das erlaubt den Zugriff auf die privaten Felder (wie 'id')
     opens de.fhswf.raumverwaltung.db.entities to org.hibernate.orm.core;

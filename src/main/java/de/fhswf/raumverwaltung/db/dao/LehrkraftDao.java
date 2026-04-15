@@ -1,4 +1,7 @@
 package de.fhswf.raumverwaltung.db.dao;
 
-public class LehrkraftDao {
+import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
+
+public class LehrkraftDao extends GenericDao<Lehrkraft> {
+
 }
