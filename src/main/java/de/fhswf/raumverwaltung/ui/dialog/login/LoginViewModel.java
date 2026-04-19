@@ -3,16 +3,17 @@ package de.fhswf.raumverwaltung.ui.dialog.login;
 import de.fhswf.raumverwaltung.ui.events.LoginFailedEvent;
 import de.fhswf.raumverwaltung.ui.events.LoginSuccessEvent;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTabPane;
+import de.fhswf.raumverwaltung.MainApp;
 
 import java.util.Observable;
 import java.util.Observer;
 
 public class LoginViewModel implements Observer {
 
-    private final LoginModel    model;
-    private final LoginDialog   view;
+    private final LoginModel  model;
+    private final LoginView   view;
 
-    public LoginViewModel(LoginDialog view) {
+    public LoginViewModel(LoginView view) {
         this.view  = view;
         this.model = LoginModel.getInstance();
         this.model.addObserver(this);
@@ -25,12 +26,12 @@ public class LoginViewModel implements Observer {
     @Override
     public void update(Observable o, Object arg) {
         if (arg instanceof LoginSuccessEvent) {
-            // Tabs laden und Dialog schließen
+            // Tabs laden
             MyTabPane.getInstance().addTabs();
-            view.close();
+            // Login-View aus dem MainFrame entfernen
+            MainApp.showMainContent();
 
         } else if (arg instanceof LoginFailedEvent) {
-            // Fehlermeldung anzeigen und Felder leeren
             view.zeigeFehlermeldung();
         }
     }

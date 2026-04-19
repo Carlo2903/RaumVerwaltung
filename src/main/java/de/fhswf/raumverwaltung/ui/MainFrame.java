@@ -1,16 +1,20 @@
 package de.fhswf.raumverwaltung.ui;
 
+import de.fhswf.raumverwaltung.ui.dialog.login.LoginView;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTabPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.control.MenuBar;
+import javafx.scene.layout.StackPane;
 
-public class MainFrame extends BorderPane {
+public class MainFrame extends StackPane {
+
+    private final LoginView loginView = new LoginView();
+
     public MainFrame() {
-        // Oben: Die Menüleiste (Ismail muss hier noch seine MyMenuBar einfügen)
-        // setTop(new MyMenuBar());
+        // TabPane liegt unten, LoginView als Overlay drüber
+        this.getChildren().addAll(MyTabPane.getInstance(), loginView);
+    }
 
-        // Mitte: Unser zentrales Tab-System
-        this.setCenter(MyTabPane.getInstance());
-        MyTabPane.getInstance().addTabs();
+    // Wird nach erfolgreichem Login aufgerufen
+    public void hideLogin() {
+        this.getChildren().remove(loginView);
     }
 }
