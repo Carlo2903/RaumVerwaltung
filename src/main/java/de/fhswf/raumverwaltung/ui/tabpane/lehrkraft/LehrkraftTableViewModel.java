@@ -1,5 +1,6 @@
 package de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
 
+import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import lombok.Getter;
@@ -30,7 +31,7 @@ public class LehrkraftTableViewModel implements Observer {
         lehrkraefteProperty.set(FXCollections.observableList(tmp));
     }
 
-    public void refresh() {
-        model.loadAll();
-    }
+    public void refresh()                     { model.loadAll(); }
+    public void speichern(Lehrkraft lehrkraft) { model.speichern(lehrkraft); }
+    public void loeschen(Lehrkraft lehrkraft)  { model.loeschen(lehrkraft); }
 }

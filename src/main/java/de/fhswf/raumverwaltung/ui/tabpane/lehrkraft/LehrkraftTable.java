@@ -1,29 +1,28 @@
 package de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
 
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 
 public class LehrkraftTable extends TableView<LehrkraftTableEntity> {
 
-    private final LehrkraftTableViewModel viewModel;
+    public LehrkraftTable(LehrkraftTableViewModel viewModel) {
 
-    public LehrkraftTable() {
-        this.viewModel = new LehrkraftTableViewModel();
+        TableColumn<LehrkraftTableEntity, String>  colName    = new TableColumn<>("Name");
+        TableColumn<LehrkraftTableEntity, String>  colKuerzel = new TableColumn<>("Kürzel");
+        TableColumn<LehrkraftTableEntity, String>  colFaecher = new TableColumn<>("Fächer");
+        TableColumn<LehrkraftTableEntity, Number>  colStd     = new TableColumn<>("Std/W");
 
-        TableColumn<LehrkraftTableEntity, String>  colName  = new TableColumn<>("Name");
-        TableColumn<LehrkraftTableEntity, String>  colKuerz = new TableColumn<>("Kürzel");
-        TableColumn<LehrkraftTableEntity, Integer> colStd   = new TableColumn<>("Soll-Std/W");
+        // Lambda statt PropertyValueFactory – typsicher, kein Reflection
+        colName.setCellValueFactory(data    -> data.getValue().nameProperty());
+        colKuerzel.setCellValueFactory(data -> data.getValue().kuerzelProperty());
+        colFaecher.setCellValueFactory(data -> data.getValue().faecherProperty());
+        colStd.setCellValueFactory(data     -> data.getValue().sollStundenProperty());
 
-        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colKuerz.setCellValueFactory(new PropertyValueFactory<>("kuerzel"));
-        colStd.setCellValueFactory(new PropertyValueFactory<>("sollStunden"));
-
-        // Spaltenbreiten
         colName.setPrefWidth(200);
-        colKuerz.setPrefWidth(100);
-        colStd.setPrefWidth(100);
+        colKuerzel.setPrefWidth(80);
+        colFaecher.setPrefWidth(250);
+        colStd.setPrefWidth(80);
 
-        this.getColumns().addAll(colName, colKuerz, colStd);
+        this.getColumns().addAll(colName, colKuerzel, colFaecher, colStd);
         this.itemsProperty().bind(viewModel.getLehrkraefteProperty());
 
         viewModel.refresh();
