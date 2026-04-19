@@ -1,5 +1,7 @@
 package de.fhswf.raumverwaltung.ui.tabpane;
 
+import de.fhswf.raumverwaltung.db.entities.Benutzer;
+import de.fhswf.raumverwaltung.service.BenutzerService;
 import de.fhswf.raumverwaltung.ui.tabpane.fach.FachTab;
 import de.fhswf.raumverwaltung.ui.tabpane.klasse.KlasseTab;
 import de.fhswf.raumverwaltung.ui.tabpane.lehrkraft.LehrkraftTab;
@@ -37,6 +39,31 @@ public class MyTabPane extends TabPane {
 
     public void addTabs() {
         this.removeAll();
-        this.getTabs().addAll(raumTab, lehrkraftTab, fachTab, klasseTab);
+
+        Benutzer benutzer = BenutzerService.getInstance().getAktuellerBenutzer();
+
+        if (benutzer == null) return;
+
+        switch (benutzer.getRolle()) {
+            case ADMINISTRATOR -> {
+                // Admin sieht alle Stammdaten-Tabs
+                this.getTabs().addAll(
+                        raumTab,
+                        lehrkraftTab,
+                        fachTab,
+                        klasseTab
+                        // AP 3: stundenplanTab, vertretungsTab
+                );
+            }
+            case LEHRER -> {
+                // AP 3: eigener Stundenplan + Vertretungsübersicht
+                // this.getTabs().add(meineStundenTab);
+            }
+            case SCHUELER -> {
+                // AP 3: nur Schülerportal
+                // this.getTabs().add(schuelerPortalTab);
+            }
+        }
     }
 }
+

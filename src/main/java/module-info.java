@@ -18,8 +18,9 @@ module de.fhswf.raumverwaltung {
     exports de.fhswf.raumverwaltung.ui.tabpane;
     exports de.fhswf.raumverwaltung.ui.tabpane.raum;
 
-    // NEU: neue UI-Packages für Ismail
     exports de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
     exports de.fhswf.raumverwaltung.ui.tabpane.fach;
     exports de.fhswf.raumverwaltung.ui.tabpane.klasse;
+    exports de.fhswf.raumverwaltung.ui.dialog.login;
+    exports de.fhswf.raumverwaltung.ui.events;
 }
