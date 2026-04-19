@@ -11,5 +11,6 @@ public class MainFrame extends BorderPane {
 
         // Mitte: Unser zentrales Tab-System
         this.setCenter(MyTabPane.getInstance());
+        MyTabPane.getInstance().addTabs();
     }
 }

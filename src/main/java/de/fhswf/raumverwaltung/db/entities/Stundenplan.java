@@ -17,6 +17,11 @@ public class Stundenplan {
 
 	private java.util.Date gueltigAb;
 
+	// NEU: Schuljahr-Verknüpfung
+	@ManyToOne
+	@JoinColumn(name = "schuljahr_id", nullable = false)
+	private Schuljahr schuljahr;
+
 	@OneToMany(mappedBy = "stundenplan", cascade = CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude // Verhindert Endlosschleifen beim Loggen
 	private List<Stunde> stunden = new ArrayList<>();

@@ -9,12 +9,20 @@ public class KonfliktService {
     private final StundeDao stundeDao = new StundeDao();
 
     public void validiereStunde(Stunde neueStunde) throws PlanungException {
-        // 1. Basis-Check: Sind alle Daten da?
-        if (neueStunde.getZeitslot() == null || neueStunde.getLehrkraft() == null) {
-            throw new PlanungException("Unvollständige Daten", "Zeitslot und Lehrkraft müssen gesetzt sein.");
+        // Null-Checks zuerst
+        if (neueStunde.getZeitslot() == null) {
+            throw new PlanungException("Unvollständige Daten", "Zeitslot muss gesetzt sein.");
+        }
+        if (neueStunde.getLehrkraft() == null) {
+            throw new PlanungException("Unvollständige Daten", "Lehrkraft muss gesetzt sein.");
+        }
+        if (neueStunde.getRaum() == null) {
+            throw new PlanungException("Unvollständige Daten", "Raum muss gesetzt sein.");
+        }
+        if (neueStunde.getKlasse() == null) {
+            throw new PlanungException("Unvollständige Daten", "Klasse muss gesetzt sein.");
         }
 
-        // 2. Datenbank-Check: Gibt es Überschneidungen?
         List<Stunde> konflikte = stundeDao.findeKollisionen(
                 neueStunde.getZeitslot(), neueStunde.getRaum(),
                 neueStunde.getLehrkraft(), neueStunde.getKlasse()
@@ -22,10 +30,16 @@ public class KonfliktService {
 
         if (!konflikte.isEmpty()) {
             Stunde k = konflikte.get(0);
-            String grund = "";
-            if (k.getRaum().equals(neueStunde.getRaum())) grund = "Raum belegt";
-            if (k.getLehrkraft().equals(neueStunde.getLehrkraft())) grund = "Lehrer bereits im Unterricht";
-            if (k.getKlasse().equals(neueStunde.getKlasse())) grund = "Klasse hat bereits Unterricht";
+            String grund;
+
+            // FIX: else-if statt if/– erste Übereinstimmung gewinnt
+            if (k.getLehrkraft().equals(neueStunde.getLehrkraft())) {
+                grund = "Lehrkraft '" + k.getLehrkraft().getName() + "' hat zu diesem Zeitslot bereits Unterricht.";
+            } else if (k.getRaum().equals(neueStunde.getRaum())) {
+                grund = "Raum '" + k.getRaum().getBezeichnung() + "' ist zu diesem Zeitslot bereits belegt.";
+            } else {
+                grund = "Klasse '" + k.getKlasse().getBezeichnung() + "' hat zu diesem Zeitslot bereits Unterricht.";
+            }
 
             throw new PlanungException("Stundenplan-Konflikt", grund);
         }

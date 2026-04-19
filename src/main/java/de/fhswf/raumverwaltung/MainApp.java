@@ -8,21 +8,23 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
+import atlantafx.base.theme.PrimerLight;  // NEU
+
 public class MainApp extends Application {
+
+    public static Stage primaryStage;     // NEU – für spätere Notifications
+
     @Override
     public void start(Stage stage) {
-        try {
-            // Wir nutzen das MainFrame (mit MenuBar und TabPane) als Root
-            MainFrame mainFrame = new MainFrame();
+        // NEU: Theme als allererstes setzen, vor allem anderen
+        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
 
-            Scene scene = new Scene(mainFrame, 1200, 800);
-            stage.setTitle("Schul-Planer Pro 2026");
-            stage.setScene(scene);
-            stage.show();
+        MainFrame mainFrame = new MainFrame();
+        Scene scene = new Scene(mainFrame, 1200, 800);
 
-            System.out.println("UI erfolgreich gestartet!");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        primaryStage = stage;             // NEU
+        stage.setTitle("Schul-Planer Pro 2026");
+        stage.setScene(scene);
+        stage.show();
     }
 }
