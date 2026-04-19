@@ -5,7 +5,6 @@ import java.util.Optional;
 
 public class SchuljahrDao extends GenericDao<Schuljahr> {
 
-    // Das aktuell aktive Schuljahr
     public Optional<Schuljahr> findeAktives() {
         return entityManager
                 .createQuery(

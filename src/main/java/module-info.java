@@ -12,11 +12,14 @@ module de.fhswf.raumverwaltung {
     exports de.fhswf.raumverwaltung.db.entities;
 
 
-    // Erlaubt JavaFX, deine MainApp zu starten
-    exports de.fhswf.raumverwaltung;
 
-    // Erlaubt JavaFX, deine Fenster und Tabs zu zeichnen
+    exports de.fhswf.raumverwaltung;
     exports de.fhswf.raumverwaltung.ui;
     exports de.fhswf.raumverwaltung.ui.tabpane;
     exports de.fhswf.raumverwaltung.ui.tabpane.raum;
+
+    // NEU: neue UI-Packages für Ismail
+    exports de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
+    exports de.fhswf.raumverwaltung.ui.tabpane.fach;
+    exports de.fhswf.raumverwaltung.ui.tabpane.klasse;
 }
