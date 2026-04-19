@@ -5,5 +5,16 @@ public enum RaumTyp {
 	FACHRAUM_CHEMIE,
 	MUSIK,
 	SPORTHALLE,
-	INFORMATIK
+	INFORMATIK;
+
+	@Override
+	public String toString() {
+		return switch (this) {
+			case STANDARD        -> "Standard";
+			case FACHRAUM_CHEMIE -> "Fachraum Chemie";
+			case MUSIK           -> "Musik";
+			case SPORTHALLE      -> "Sporthalle";
+			case INFORMATIK      -> "Informatik";
+		};
+	}
 }
