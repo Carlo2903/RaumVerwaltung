@@ -6,6 +6,7 @@ import de.fhswf.raumverwaltung.ui.tabpane.fach.FachTab;
 import de.fhswf.raumverwaltung.ui.tabpane.klasse.KlasseTab;
 import de.fhswf.raumverwaltung.ui.tabpane.lehrkraft.LehrkraftTab;
 import de.fhswf.raumverwaltung.ui.tabpane.raum.RaumTab;
+import de.fhswf.raumverwaltung.ui.tabpane.stundenplan.StundenplanTab;
 import javafx.scene.control.TabPane;
 
 public class MyTabPane extends TabPane {
@@ -16,12 +17,14 @@ public class MyTabPane extends TabPane {
     private final LehrkraftTab lehrkraftTab;
     private final FachTab      fachTab;
     private final KlasseTab    klasseTab;
+    private final StundenplanTab stundenplanTab;
 
     private MyTabPane() {
         this.raumTab      = new RaumTab();
         this.lehrkraftTab = new LehrkraftTab();
         this.fachTab      = new FachTab();
         this.klasseTab    = new KlasseTab();
+        this.stundenplanTab = new StundenplanTab();
 
         this.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
     }
@@ -51,7 +54,8 @@ public class MyTabPane extends TabPane {
                         raumTab,
                         lehrkraftTab,
                         fachTab,
-                        klasseTab
+                        klasseTab,
+                        stundenplanTab
                         // AP 3: stundenplanTab, vertretungsTab
                 );
             }
