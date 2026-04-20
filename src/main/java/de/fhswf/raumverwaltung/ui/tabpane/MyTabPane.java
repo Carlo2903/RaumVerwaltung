@@ -6,26 +6,24 @@ import de.fhswf.raumverwaltung.ui.tabpane.fach.FachTab;
 import de.fhswf.raumverwaltung.ui.tabpane.klasse.KlasseTab;
 import de.fhswf.raumverwaltung.ui.tabpane.lehrkraft.LehrkraftTab;
 import de.fhswf.raumverwaltung.ui.tabpane.raum.RaumTab;
+import de.fhswf.raumverwaltung.ui.tabpane.schueler.SchuelerPortalTab;
 import de.fhswf.raumverwaltung.ui.tabpane.stundenplan.StundenplanTab;
+import de.fhswf.raumverwaltung.ui.tabpane.vertretung.VertretungTab;
 import javafx.scene.control.TabPane;
 
 public class MyTabPane extends TabPane {
 
     private static MyTabPane instance;
 
-    private final RaumTab      raumTab;
-    private final LehrkraftTab lehrkraftTab;
-    private final FachTab      fachTab;
-    private final KlasseTab    klasseTab;
-    private final StundenplanTab stundenplanTab;
+    private final RaumTab          raumTab          = new RaumTab();
+    private final LehrkraftTab     lehrkraftTab     = new LehrkraftTab();
+    private final FachTab          fachTab          = new FachTab();
+    private final KlasseTab        klasseTab        = new KlasseTab();
+    private final StundenplanTab   stundenplanTab   = new StundenplanTab();
+    private final VertretungTab    vertretungTab    = new VertretungTab();
+    private final SchuelerPortalTab schuelerTab     = new SchuelerPortalTab();
 
     private MyTabPane() {
-        this.raumTab      = new RaumTab();
-        this.lehrkraftTab = new LehrkraftTab();
-        this.fachTab      = new FachTab();
-        this.klasseTab    = new KlasseTab();
-        this.stundenplanTab = new StundenplanTab();
-
         this.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
     }
 
@@ -44,30 +42,24 @@ public class MyTabPane extends TabPane {
         this.removeAll();
 
         Benutzer benutzer = BenutzerService.getInstance().getAktuellerBenutzer();
-
         if (benutzer == null) return;
 
         switch (benutzer.getRolle()) {
-            case ADMINISTRATOR -> {
-                // Admin sieht alle Stammdaten-Tabs
-                this.getTabs().addAll(
-                        raumTab,
-                        lehrkraftTab,
-                        fachTab,
-                        klasseTab,
-                        stundenplanTab
-                        // AP 3: stundenplanTab, vertretungsTab
-                );
-            }
-            case LEHRER -> {
-                // AP 3: eigener Stundenplan + Vertretungsübersicht
-                // this.getTabs().add(meineStundenTab);
-            }
-            case SCHUELER -> {
-                // AP 3: nur Schülerportal
-                // this.getTabs().add(schuelerPortalTab);
-            }
+            case ADMINISTRATOR -> this.getTabs().addAll(
+                    raumTab,
+                    lehrkraftTab,
+                    fachTab,
+                    klasseTab,
+                    stundenplanTab,
+                    vertretungTab
+            );
+            case LEHRER -> this.getTabs().addAll(
+                    stundenplanTab,
+                    vertretungTab
+            );
+            case SCHUELER -> this.getTabs().addAll(
+                    schuelerTab
+            );
         }
     }
 }
-
