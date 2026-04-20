@@ -5,10 +5,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class RaumTable extends TableView<RaumTableEntity> {
-    private final RaumTableViewModel viewModel;
 
-    public RaumTable() {
-        this.viewModel = new RaumTableViewModel();
+    public RaumTable(RaumTableViewModel viewModel) {
 
         TableColumn<RaumTableEntity, String> colBez = new TableColumn<>("Bezeichnung");
         colBez.setCellValueFactory(data -> data.getValue().bezeichnungProperty());

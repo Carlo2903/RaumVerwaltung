@@ -1,14 +1,13 @@
 package de.fhswf.raumverwaltung.ui.tabpane.klasse;
 
+import de.fhswf.raumverwaltung.ui.tabpane.fach.FachTableViewModel;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class KlasseTable extends TableView<KlasseTableEntity> {
 
-    private final KlasseTableViewModel viewModel;
 
-    public KlasseTable() {
-        this.viewModel = new KlasseTableViewModel();
+    public KlasseTable(KlasseTableViewModel viewModel) {
 
         TableColumn<KlasseTableEntity, String>  colBez   = new TableColumn<>("Klasse");
         TableColumn<KlasseTableEntity, Integer> colJahr  = new TableColumn<>("Jahrgang");

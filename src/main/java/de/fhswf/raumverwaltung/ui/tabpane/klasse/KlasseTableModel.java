@@ -2,6 +2,8 @@ package de.fhswf.raumverwaltung.ui.tabpane.klasse;
 
 import de.fhswf.raumverwaltung.db.dao.KlasseDao;
 import de.fhswf.raumverwaltung.db.entities.Klasse;
+import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
@@ -19,6 +21,10 @@ public class KlasseTableModel extends Observable {
             instance = new KlasseTableModel();
         }
         return instance;
+    }
+
+    public boolean kannGeloeschtWerden(Klasse klasse) {
+        return !dao.wirdVerwendet(klasse);
     }
 
     public List<Klasse> getKlassen() {

@@ -1,5 +1,8 @@
 package de.fhswf.raumverwaltung.ui.tabpane.klasse;
 
+import de.fhswf.raumverwaltung.db.dao.LehrkraftDao;
+import de.fhswf.raumverwaltung.db.entities.Klasse;
+import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import lombok.Getter;
@@ -13,9 +16,22 @@ public class KlasseTableViewModel implements Observer {
 
     private final KlasseTableModel model;
 
+    // DAO nur hier – nie in der View
+    private final LehrkraftDao lehrkraftDao = new LehrkraftDao();
+
     @Getter
     private final ObjectProperty<ObservableList<KlasseTableEntity>> klassenProperty
             = new SimpleObjectProperty<>();
+
+    // Lehrkräfte für ComboBox in der View
+    @Getter
+    private final ObjectProperty<ObservableList<Lehrkraft>> lehrkraefteProperty
+            = new SimpleObjectProperty<>();
+
+    @Getter
+    private final StringProperty fehlerProperty = new SimpleStringProperty();
+
+    private Klasse aktuellerDatensatz = null;
 
     public KlasseTableViewModel() {
         this.model = KlasseTableModel.getInstance();
@@ -31,6 +47,77 @@ public class KlasseTableViewModel implements Observer {
     }
 
     public void refresh() {
+        // Klassen laden
         model.loadAll();
+        // Lehrkräfte für ComboBox laden – kein DAO in der View nötig
+        lehrkraefteProperty.set(
+                FXCollections.observableList(lehrkraftDao.findAll())
+        );
+    }
+
+    public void speichern(String bezeichnung, int jahrgangsstufe,
+                          Lehrkraft klassenLehrer) {
+        fehlerProperty.set(null);
+        if (bezeichnung.isBlank()) {
+            fehlerProperty.set("Bezeichnung darf nicht leer sein.");
+            return;
+        }
+
+        if (aktuellerDatensatz == null) {
+            Klasse neu = Klasse.builder()
+                    .bezeichnung(bezeichnung)
+                    .jahrgangsstufe(jahrgangsstufe)
+                    .klassenLehrer(klassenLehrer)
+                    .build();
+            model.speichern(neu);
+        } else {
+            aktuellerDatensatz.setBezeichnung(bezeichnung);
+            aktuellerDatensatz.setJahrgangsstufe(jahrgangsstufe);
+            aktuellerDatensatz.setKlassenLehrer(klassenLehrer);
+            model.speichern(aktuellerDatensatz);
+        }
+
+        fehlerProperty.set(null);
+        aktuellerDatensatz = null;
+    }
+
+    public void loeschen() {
+        fehlerProperty.set(null);
+
+        if (aktuellerDatensatz == null) {
+            fehlerProperty.set("Bitte eine Klasse auswählen.");
+            return;
+        }
+
+        if (!model.kannGeloeschtWerden(aktuellerDatensatz)) {
+            fehlerProperty.set(
+                    "Klasse '" + aktuellerDatensatz.getBezeichnung() +
+                            "' kann nicht gelöscht werden, " +
+                            "da sie noch Stunden zugewiesen ist."
+            );
+            return;
+        }
+
+        try {
+            model.loeschen(aktuellerDatensatz);
+            aktuellerDatensatz = null;
+        } catch (jakarta.persistence.PersistenceException e) {
+            fehlerProperty.set(
+                    "Klasse kann nicht gelöscht werden, " +
+                            "da sie noch Stunden zugewiesen ist."
+            );
+        }
+    }
+
+    public void datensatzAuswaehlen(Klasse klasse) {
+        this.aktuellerDatensatz = klasse;
+    }
+
+    public void datensatzAbwaehlen() {
+        this.aktuellerDatensatz = null;
+    }
+
+    public Klasse getAktuellerDatensatz() {
+        return aktuellerDatensatz;
     }
 }

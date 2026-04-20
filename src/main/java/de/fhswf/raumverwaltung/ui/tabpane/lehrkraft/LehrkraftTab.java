@@ -1,10 +1,10 @@
 package de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
 
-import de.fhswf.raumverwaltung.db.dao.FachDao;
 import de.fhswf.raumverwaltung.db.entities.Fach;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
@@ -17,160 +17,141 @@ public class LehrkraftTab extends MyTab {
 
     private final LehrkraftTableViewModel viewModel = new LehrkraftTableViewModel();
     private final LehrkraftTable          table     = new LehrkraftTable(viewModel);
-    private final FachDao                 fachDao   = new FachDao();
 
-    // Formularfelder
-    private final TextField      nameField    = new TextField();
-    private final TextField      kuerzelField = new TextField();
-    private final Spinner<Integer> stdSpinner = new Spinner<>(0, 40, 20);
+    private final TextField        nameField    = new TextField();
+    private final TextField        kuerzelField = new TextField();
+    private final Spinner<Integer> stdSpinner   = new Spinner<>(0, 40, 20);
 
-    // Dynamische Fach-Checkboxen: Fach → CheckBox
     private final Map<Fach, CheckBox> fachCheckboxen = new HashMap<>();
-
-    // Aktuell bearbeitete Lehrkraft (null = neue Lehrkraft)
-    private Lehrkraft aktuellerDatensatz = null;
+    private final HBox                faecherBox     = new HBox(12);
 
     public LehrkraftTab() {
         super("Lehrkräfte");
         this.setContent(buildLayout());
+        beobachteViewModel();
     }
 
-    // ---------------------------------------------------------------
-    // Layout
-    // ---------------------------------------------------------------
+    private void beobachteViewModel() {
+        // Fächer für Checkboxen – kommen aus ViewModel
+        viewModel.getFaecherProperty().addListener((obs, o, faecher) -> {
+            if (faecher == null) return;
+            faecherBox.getChildren().clear();
+            fachCheckboxen.clear();
+            for (Fach fach : faecher) {
+                CheckBox cb = new CheckBox(fach.getBezeichnung());
+                fachCheckboxen.put(fach, cb);
+                faecherBox.getChildren().add(cb);
+            }
+        });
+
+        table.getSelectionModel().selectedItemProperty().addListener(
+                (obs, o, n) -> {
+                    if (n != null) {
+                        viewModel.datensatzAuswaehlen(n.getLehrkraft());
+                        fillFormAusViewModel();
+                    }
+                }
+        );
+
+        viewModel.refresh();
+    }
 
     private BorderPane buildLayout() {
         BorderPane pane = new BorderPane();
         pane.setCenter(table);
         pane.setBottom(buildForm());
-
-        // Zeile anklicken → Formular füllen
-        table.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldVal, newVal) -> {
-                    if (newVal != null) fillForm(newVal.getLehrkraft());
-                }
-        );
-
         return pane;
     }
 
     private VBox buildForm() {
-        // --- Zeile 1: Name + Kürzel ---
         nameField.setPromptText("Name");
         kuerzelField.setPromptText("Kürzel");
         stdSpinner.setEditable(true);
         stdSpinner.setPrefWidth(80);
 
         GridPane felder = new GridPane();
-        felder.setHgap(16);
+        felder.setHgap(12);
         felder.setVgap(8);
         felder.setPadding(new Insets(12));
 
-        felder.add(new Label("Name"),   0, 0);
-        felder.add(nameField,           1, 0);
-        felder.add(new Label("Kürzel"), 2, 0);
-        felder.add(kuerzelField,        3, 0);
+        felder.add(new Label("Name:"),    0, 0);
+        felder.add(nameField,             1, 0);
+        felder.add(new Label("Kürzel:"),  2, 0);
+        felder.add(kuerzelField,          3, 0);
+        felder.add(new Label("Std/W:"),   4, 0);
+        felder.add(stdSpinner,            5, 0);
+        felder.add(new Label("Fächer:"),  0, 1);
+        felder.add(faecherBox,            1, 1, 5, 1);
 
-        // --- Zeile 2: Fächer als Checkboxen (dynamisch aus DB) ---
-        felder.add(new Label("Fächer:"), 0, 1);
+        Button btnNeu       = new Button("Neu");
+        Button btnSpeichern = new Button("Speichern");
+        Button btnLoeschen  = new Button("Löschen");
 
-        HBox faecherBox = new HBox(12);
-        List<Fach> alleFaecher = fachDao.findAll();
-        for (Fach fach : alleFaecher) {
-            CheckBox cb = new CheckBox(fach.getBezeichnung());
-            fachCheckboxen.put(fach, cb);
-            faecherBox.getChildren().add(cb);
-        }
-        felder.add(faecherBox, 1, 1, 2, 1); // colspan 2
+        btnLoeschen.setStyle(
+                "-fx-background-color: #cf222e; -fx-text-fill: white;"
+        );
 
-        felder.add(new Label("Std/W"), 3, 1);
-        felder.add(stdSpinner,         4, 1);
+        btnNeu.setOnAction(e -> clearForm());
 
-        // --- Zeile 3: Buttons ---
-        Button btnAbbrechen  = new Button("Abbrechen");
-        Button btnSpeichern  = new Button("Speichern");
+        btnSpeichern.setOnAction(e -> {
+            List<Fach> gewaehlte = new ArrayList<>();
+            fachCheckboxen.forEach((fach, cb) -> {
+                if (cb.isSelected()) gewaehlte.add(fach);
+            });
+            viewModel.speichern(
+                    nameField.getText().trim(),
+                    kuerzelField.getText().trim(),
+                    stdSpinner.getValue(),
+                    gewaehlte
+            );
+            String fehler = viewModel.getFehlerProperty().get();
+            if (fehler != null) {
+                new Alert(Alert.AlertType.WARNING, fehler).showAndWait();
+            } else {
+                clearForm();
+            }
+        });
 
-        btnAbbrechen.setOnAction(e -> clearForm());
-        btnSpeichern.setOnAction(e -> speichern());
+        btnLoeschen.setOnAction(e -> {
+            viewModel.loeschen();
+            String fehler = viewModel.getFehlerProperty().get();
+            if (fehler != null) {
+                new Alert(Alert.AlertType.WARNING, fehler).showAndWait();
+            } else {
+                clearForm();
+            }
+        });
 
-        HBox buttons = new HBox(8, btnAbbrechen, btnSpeichern);
-        buttons.setPadding(new Insets(0, 12, 12, 0));
-        // Speichern-Button rechts ausrichten
-        HBox.setHgrow(btnAbbrechen, Priority.ALWAYS);
-        buttons.setStyle("-fx-alignment: center-right;");
+        HBox buttons = new HBox(8, btnNeu, btnSpeichern, btnLoeschen);
+        buttons.setAlignment(Pos.CENTER_RIGHT);
+        buttons.setPadding(new Insets(0, 12, 12, 12));
 
-        VBox formContainer = new VBox(felder, buttons);
-        formContainer.setStyle(
-                "-fx-border-color: #e0e0e0; " +
-                        "-fx-border-radius: 6; " +
-                        "-fx-background-radius: 6; " +
+        VBox form = new VBox(felder, buttons);
+        form.setStyle(
+                "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1 0 0 0;" +
                         "-fx-background-color: white;"
         );
-        formContainer.setPadding(new Insets(4));
-
-        return formContainer;
+        return form;
     }
 
-    // ---------------------------------------------------------------
-    // Formular-Logik
-    // ---------------------------------------------------------------
-
-    private void fillForm(Lehrkraft lk) {
-        aktuellerDatensatz = lk;
+    private void fillFormAusViewModel() {
+        Lehrkraft lk = viewModel.getAktuellerDatensatz();
+        if (lk == null) return;
         nameField.setText(lk.getName());
         kuerzelField.setText(lk.getKuerzel());
         stdSpinner.getValueFactory().setValue(lk.getSollStunden());
-
-        // Checkboxen setzen
         fachCheckboxen.forEach((fach, cb) ->
                 cb.setSelected(lk.getFaecher().contains(fach))
         );
     }
 
     private void clearForm() {
-        aktuellerDatensatz = null;
+        viewModel.datensatzAbwaehlen();
         nameField.clear();
         kuerzelField.clear();
         stdSpinner.getValueFactory().setValue(20);
         fachCheckboxen.values().forEach(cb -> cb.setSelected(false));
         table.getSelectionModel().clearSelection();
-    }
-
-    private void speichern() {
-        // Validierung
-        if (nameField.getText().isBlank() || kuerzelField.getText().isBlank()) {
-            new Alert(Alert.AlertType.WARNING,
-                    "Name und Kürzel dürfen nicht leer sein.")
-                    .showAndWait();
-            return;
-        }
-
-        // Ausgewählte Fächer sammeln
-        List<Fach> gewaehlteFaecher = new ArrayList<>();
-        fachCheckboxen.forEach((fach, cb) -> {
-            if (cb.isSelected()) gewaehlteFaecher.add(fach);
-        });
-
-        if (aktuellerDatensatz == null) {
-            // Neue Lehrkraft anlegen
-            Lehrkraft neu = Lehrkraft.builder()
-                    .name(nameField.getText().trim())
-                    .kuerzel(kuerzelField.getText().trim())
-                    .sollStunden(stdSpinner.getValue())
-                    .faecher(gewaehlteFaecher)
-                    .sperrzeiten(new ArrayList<>())
-                    .build();
-            viewModel.speichern(neu);
-        } else {
-            // Bestehende Lehrkraft aktualisieren
-            aktuellerDatensatz.setName(nameField.getText().trim());
-            aktuellerDatensatz.setKuerzel(kuerzelField.getText().trim());
-            aktuellerDatensatz.setSollStunden(stdSpinner.getValue());
-            aktuellerDatensatz.getFaecher().clear();
-            aktuellerDatensatz.getFaecher().addAll(gewaehlteFaecher);
-            viewModel.speichern(aktuellerDatensatz);
-        }
-
-        clearForm();
     }
 }

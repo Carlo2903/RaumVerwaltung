@@ -5,10 +5,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 public class FachTable extends TableView<FachTableEntity> {
 
-    private final FachTableViewModel viewModel;
-
-    public FachTable() {
-        this.viewModel = new FachTableViewModel();
+    public FachTable(FachTableViewModel viewModel) {
 
         TableColumn<FachTableEntity, String>  colBez = new TableColumn<>("Fach");
         TableColumn<FachTableEntity, String>  colKue = new TableColumn<>("Kürzel");

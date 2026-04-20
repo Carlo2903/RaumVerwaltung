@@ -35,4 +35,5 @@ public class Lehrkraft {
 	@OneToMany(mappedBy = "lehrkraft", cascade = CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude
 	private List<Sperrzeit> sperrzeiten = new ArrayList<>();
+
 }

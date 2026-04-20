@@ -2,6 +2,8 @@ package de.fhswf.raumverwaltung.ui.tabpane.fach;
 
 import de.fhswf.raumverwaltung.db.dao.FachDao;
 import de.fhswf.raumverwaltung.db.entities.Fach;
+import de.fhswf.raumverwaltung.db.entities.Klasse;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
@@ -19,6 +21,10 @@ public class FachTableModel extends Observable {
             instance = new FachTableModel();
         }
         return instance;
+    }
+
+    public boolean kannGeloeschtWerden(Fach fach) {
+        return !dao.wirdVerwendet(fach);
     }
 
     public List<Fach> getFaecher() {

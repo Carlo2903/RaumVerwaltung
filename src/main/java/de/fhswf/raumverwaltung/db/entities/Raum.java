@@ -8,6 +8,7 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Raum {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

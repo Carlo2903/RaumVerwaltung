@@ -46,11 +46,21 @@ public abstract class GenericDao<T> implements Dao<T> {
     public void remove(T entity) {
         try {
             entityManager.getTransaction().begin();
-            entityManager.remove(entityManager.contains(entity) ? entity : entityManager.merge(entity));
+            entityManager.remove(
+                    entityManager.contains(entity)
+                            ? entity
+                            : entityManager.merge(entity)
+            );
             entityManager.getTransaction().commit();
         } catch (Exception e) {
-            entityManager.getTransaction().rollback();
-            throw new PersistenceException(e);
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            // PlanungException statt roher PersistenceException
+            throw new jakarta.persistence.PersistenceException(
+                    "Datensatz kann nicht gelöscht werden – " +
+                            "er wird noch von anderen Einträgen verwendet.", e
+            );
         }
     }
 

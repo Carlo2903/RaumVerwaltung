@@ -2,6 +2,8 @@ package de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
 
 import de.fhswf.raumverwaltung.db.dao.LehrkraftDao;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
+import de.fhswf.raumverwaltung.db.entities.Raum;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
@@ -19,6 +21,10 @@ public class LehrkraftTableModel extends Observable {
             instance = new LehrkraftTableModel();
         }
         return instance;
+    }
+
+    public boolean kannGeloeschtWerden(Lehrkraft lehrkraft) {
+        return !dao.wirdVerwendet(lehrkraft);
     }
 
     public List<Lehrkraft> getLehrkraefte() {
