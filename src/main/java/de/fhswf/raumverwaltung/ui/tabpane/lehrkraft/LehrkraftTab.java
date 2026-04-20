@@ -3,6 +3,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
 import de.fhswf.raumverwaltung.db.entities.Fach;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -33,16 +34,11 @@ public class LehrkraftTab extends MyTab {
 
     private void beobachteViewModel() {
         // Fächer für Checkboxen – kommen aus ViewModel
-        viewModel.getFaecherProperty().addListener((obs, o, faecher) -> {
-            if (faecher == null) return;
-            faecherBox.getChildren().clear();
-            fachCheckboxen.clear();
-            for (Fach fach : faecher) {
-                CheckBox cb = new CheckBox(fach.getBezeichnung());
-                fachCheckboxen.put(fach, cb);
-                faecherBox.getChildren().add(cb);
-            }
-        });
+        viewModel.getFaecher().addListener(
+                (javafx.collections.ListChangeListener<Fach>) change -> {
+                    baueFachCheckboxen(viewModel.getFaecher());
+                }
+        );
 
         table.getSelectionModel().selectedItemProperty().addListener(
                 (obs, o, n) -> {
@@ -54,6 +50,16 @@ public class LehrkraftTab extends MyTab {
         );
 
         viewModel.refresh();
+    }
+
+    private void baueFachCheckboxen(ObservableList<Fach> faecher) {
+        faecherBox.getChildren().clear();
+        fachCheckboxen.clear();
+        for (Fach fach : faecher) {
+            CheckBox cb = new CheckBox(fach.getBezeichnung());
+            fachCheckboxen.put(fach, cb);
+            faecherBox.getChildren().add(cb);
+        }
     }
 
     private BorderPane buildLayout() {

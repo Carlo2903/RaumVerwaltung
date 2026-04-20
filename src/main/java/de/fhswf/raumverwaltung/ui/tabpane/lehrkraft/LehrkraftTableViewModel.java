@@ -26,8 +26,7 @@ public class LehrkraftTableViewModel implements Observer {
 
     // Alle Fächer für Checkboxen in der View
     @Getter
-    private final ObjectProperty<ObservableList<Fach>> faecherProperty
-            = new SimpleObjectProperty<>();
+    private final ObservableList<Fach> faecher = FXCollections.observableArrayList();
 
     @Getter
     private final StringProperty fehlerProperty = new SimpleStringProperty();
@@ -49,10 +48,13 @@ public class LehrkraftTableViewModel implements Observer {
 
     public void refresh() {
         model.loadAll();
-        // Fächer für Checkboxen laden – kein DAO in der View nötig
-        faecherProperty.set(
-                FXCollections.observableList(fachDao.findAll())
+        lehrkraefteProperty.set(
+                FXCollections.observableList(model.getLehrkraefte().stream()
+                        .map(LehrkraftTableEntity::new)
+                        .collect(Collectors.toList()))
         );
+        // setAll() feuert immer – egal ob Inhalt gleich ist
+        faecher.setAll(fachDao.findAll());
     }
 
     public void speichern(String name, String kuerzel,

@@ -3,6 +3,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.klasse;
 import de.fhswf.raumverwaltung.db.entities.Klasse;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -25,8 +26,9 @@ public class KlasseTab extends MyTab {
 
     private void beobachteViewModel() {
         // Lehrkräfte für ComboBox – kommen aus ViewModel
-        viewModel.getLehrkraefteProperty().addListener(
-                (obs, o, n) -> { if (n != null) klassenlehrerBox.setItems(n); }
+        viewModel.getLehrkraefte().addListener(
+                (ListChangeListener<Lehrkraft>) change ->
+                        klassenlehrerBox.setItems(viewModel.getLehrkraefte())
         );
 
         table.getSelectionModel().selectedItemProperty().addListener(

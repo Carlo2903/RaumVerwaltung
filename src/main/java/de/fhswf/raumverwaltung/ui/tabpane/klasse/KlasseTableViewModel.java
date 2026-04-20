@@ -3,6 +3,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.klasse;
 import de.fhswf.raumverwaltung.db.dao.LehrkraftDao;
 import de.fhswf.raumverwaltung.db.entities.Klasse;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
+import de.fhswf.raumverwaltung.ui.tabpane.lehrkraft.LehrkraftTableEntity;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import lombok.Getter;
@@ -25,8 +26,8 @@ public class KlasseTableViewModel implements Observer {
 
     // Lehrkräfte für ComboBox in der View
     @Getter
-    private final ObjectProperty<ObservableList<Lehrkraft>> lehrkraefteProperty
-            = new SimpleObjectProperty<>();
+    private final ObservableList<Lehrkraft> lehrkraefte
+            = FXCollections.observableArrayList();
 
     @Getter
     private final StringProperty fehlerProperty = new SimpleStringProperty();
@@ -50,9 +51,8 @@ public class KlasseTableViewModel implements Observer {
         // Klassen laden
         model.loadAll();
         // Lehrkräfte für ComboBox laden – kein DAO in der View nötig
-        lehrkraefteProperty.set(
-                FXCollections.observableList(lehrkraftDao.findAll())
-        );
+
+        lehrkraefte.setAll(lehrkraftDao.findAll());
     }
 
     public void speichern(String bezeichnung, int jahrgangsstufe,
