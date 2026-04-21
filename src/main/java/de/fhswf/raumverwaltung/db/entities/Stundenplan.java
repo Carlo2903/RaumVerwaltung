@@ -15,7 +15,7 @@ public class Stundenplan {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private java.util.Date gueltigAb;
+	private java.time.LocalDate gueltigAb;
 
 	// NEU: Schuljahr-Verknüpfung
 	@ManyToOne
