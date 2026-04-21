@@ -1,17 +1,10 @@
 package de.fhswf.raumverwaltung.ui.tabpane.stundenplan;
 
-import de.fhswf.raumverwaltung.db.dao.SchuljahrDao;
-import de.fhswf.raumverwaltung.db.dao.StundenplanDao;
-import de.fhswf.raumverwaltung.db.dao.StundeDao;
-import de.fhswf.raumverwaltung.db.dao.KlasseDao;
+import de.fhswf.raumverwaltung.db.dao.*;
 import de.fhswf.raumverwaltung.db.entities.*;
 import lombok.Getter;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Optional;
+import java.util.*;
 
 public class StundenplanTableModel extends Observable {
 
@@ -21,6 +14,9 @@ public class StundenplanTableModel extends Observable {
     private final SchuljahrDao   schuljahrDao   = new SchuljahrDao();
     private final StundeDao      stundeDao      = new StundeDao();
     private final KlasseDao      klasseDao      = new KlasseDao();
+    private final LehrkraftDao lehrkraftDao = new LehrkraftDao();
+    private final FachDao      fachDao      = new FachDao();
+    private final RaumDao      raumDao      = new RaumDao();
 
     // Aktuell angezeigter Stundenplan
     @Getter
@@ -34,10 +30,24 @@ public class StundenplanTableModel extends Observable {
     @Getter
     private List<Klasse> alleKlassen;
 
+    @Getter
+    private List<Lehrkraft> alleLehrkraefte = new ArrayList<>();
+
+    @Getter
+    private List<Fach> alleFaecher = new ArrayList<>();
+
+    @Getter
+    private List<Raum> alleRaeume = new ArrayList<>();
+
     // Das Grid: Wochentag → Stundennummer → Stunde
     // Beispiel: grid.get(MONTAG).get(1) = die 1. Stunde am Montag
     @Getter
     private Map<Wochentag, Map<Integer, Stunde>> stundenGrid = new HashMap<>();
+
+    @Getter
+    private List<Zeitslot> alleZeitslots = new ArrayList<>();
+
+    private final ZeitslotDao zeitslotDao = new ZeitslotDao();
 
     private StundenplanTableModel() {}
 
@@ -51,6 +61,12 @@ public class StundenplanTableModel extends Observable {
     // Initialer Ladevorgang
     public void laden() {
         alleKlassen = klasseDao.findAll();
+        alleLehrkraefte = lehrkraftDao.findAll();
+        alleFaecher     = fachDao.findAll();
+        alleRaeume      = raumDao.findAll();
+        schuljahrDao.clearCache();
+        stundeDao.clearCache();
+        alleZeitslots   = zeitslotDao.findAll();
 
         // Aktives Schuljahr suchen
         Optional<Schuljahr> schuljahr = schuljahrDao.findeAktives();

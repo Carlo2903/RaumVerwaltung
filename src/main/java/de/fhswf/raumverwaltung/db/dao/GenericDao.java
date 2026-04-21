@@ -28,7 +28,9 @@ public abstract class GenericDao<T> implements Dao<T> {
             throw new PersistenceException(e);
         }
     }
-
+    public void clearCache() {
+        entityManager.clear();
+    }
     @Override
     public T merge(T entity) {
         try {

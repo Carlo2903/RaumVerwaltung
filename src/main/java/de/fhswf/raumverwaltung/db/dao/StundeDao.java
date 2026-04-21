@@ -38,6 +38,14 @@ public class StundeDao extends GenericDao<Stunde> {
                 .getResultList();
     }
 
+    public List<Stunde> findeNachStundenplan(Stundenplan stundenplan) {
+        return entityManager
+                .createQuery(
+                        "SELECT s FROM Stunde s WHERE s.stundenplan = :plan",
+                        Stunde.class)
+                .setParameter("plan", stundenplan)
+                .getResultList();
+    }
     // Alle Stunden eines Zeitslots (für Raumplan-Ansicht)
     public List<Stunde> findeNachZeitslot(Zeitslot zeitslot) {
         return entityManager
@@ -47,4 +55,5 @@ public class StundeDao extends GenericDao<Stunde> {
                 .setParameter("slot", zeitslot)
                 .getResultList();
     }
+
 }

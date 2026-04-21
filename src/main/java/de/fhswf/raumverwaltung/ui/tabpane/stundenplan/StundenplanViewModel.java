@@ -7,9 +7,7 @@ import javafx.beans.property.*;
 import javafx.collections.*;
 import lombok.Getter;
 
-import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.*;
 
 public class StundenplanViewModel implements Observer {
 
@@ -22,6 +20,9 @@ public class StundenplanViewModel implements Observer {
     @Getter
     private final ObjectProperty<ObservableList<Klasse>> klassenProperty
             = new SimpleObjectProperty<>();
+    @Getter
+    private final ObservableList<Stunde> stundenListe
+            = FXCollections.observableArrayList();
 
     private final KonfliktService konfliktService = new KonfliktService();
 
@@ -30,11 +31,19 @@ public class StundenplanViewModel implements Observer {
         this.model.addObserver(this);
     }
 
+
     @Override
     public void update(Observable o, Object arg) {
+        // gridProperty bleibt für das Grid
         gridProperty.set(model.getStundenGrid());
         klassenProperty.set(
                 FXCollections.observableList(model.getAlleKlassen())
+        );
+        // setAll() feuert immer
+        stundenListe.setAll(
+                model.getStundenGrid().values().stream()
+                        .flatMap(m -> m.values().stream())
+                        .toList()
         );
     }
 
@@ -50,4 +59,27 @@ public class StundenplanViewModel implements Observer {
     public void stundeLoeschen(Stunde stunde)  { model.stundeLoeschen(stunde); }
 
     public Stundenplan getAktuellerPlan()      { return model.getAktuellerPlan(); }
+
+    public List<Lehrkraft> findeLehrkraefteNachFach(Fach fach) {
+        if (fach == null) return List.of();
+        return model.getAlleLehrkraefte().stream()
+                .filter(lk -> lk.getFaecher().contains(fach))
+                .toList();
+    }
+
+    public List<Fach> getAlleFaecher() {
+        return model.getAlleFaecher();
+    }
+
+    public List<Raum> getAlleRaeume() {
+        return model.getAlleRaeume();
+    }
+
+    public Optional<Zeitslot> findeZeitslot(Wochentag tag, int stundenNummer) {
+        return model.getAlleZeitslots().stream()
+                .filter(z -> z.getWochentag() == tag
+                        && z.getStundenNummer() == stundenNummer)
+                .findFirst();
+    }
+
 }

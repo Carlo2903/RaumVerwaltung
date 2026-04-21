@@ -36,9 +36,10 @@ public class StundenplanRasterView extends BorderPane {
         this.setTop(buildHeader());
         this.setCenter(buildGrid());
 
-        // Auf Model-Updates reagieren
-        viewModel.getGridProperty().addListener(
-                (obs, oldVal, newVal) -> aktualisiereGrid(newVal)
+        // ListChangeListener statt ObjectProperty ChangeListener
+        viewModel.getStundenListe().addListener(
+                (javafx.collections.ListChangeListener<Stunde>) change ->
+                        aktualisiereGrid(viewModel.getGridProperty().get())
         );
 
         viewModel.laden();
