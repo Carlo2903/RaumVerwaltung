@@ -66,6 +66,8 @@ public class StundenplanTableModel extends Observable {
         alleRaeume      = raumDao.findAll();
         schuljahrDao.clearCache();
         stundeDao.clearCache();
+        zeitslotDao.clearCache();
+        stundenplanDao.clearCache();
         alleZeitslots   = zeitslotDao.findAll();
 
         // Aktives Schuljahr suchen
@@ -129,10 +131,15 @@ public class StundenplanTableModel extends Observable {
             return;
         }
 
-        // Stunden filtern (nach Klasse falls gesetzt) und ins Grid eintragen
-        aktuellerPlan.getStunden().stream()
+        //Cache leeren damit neue Stunde auch gefunden wird
+        stundeDao.clearCache();
+        List<Stunde> aktuelleStunden = stundeDao.findeNachStundenplan(aktuellerPlan);
+
+        // Stunden filtern (nach id falls gesetzt) und ins Grid eintragen
+        aktuelleStunden.stream()
                 .filter(s -> aktuelleKlasse == null
-                        || s.getKlasse().equals(aktuelleKlasse))
+                        || (s.getKlasse() != null &&
+                        s.getKlasse().getId().equals(aktuelleKlasse.getId())))
                 .forEach(s -> {
                     Wochentag tag    = s.getZeitslot().getWochentag();
                     int stundeNummer = s.getZeitslot().getStundenNummer();
@@ -141,5 +148,11 @@ public class StundenplanTableModel extends Observable {
 
         setChanged();
         notifyObservers();
+    }
+
+
+    public Optional<Zeitslot> findeZeitslot(Wochentag tag, int stundenNummer) {
+        // Direkt aus DB – nicht aus gecachter Liste
+        return zeitslotDao.findeNachTagUndNummer(tag, stundenNummer);
     }
 }

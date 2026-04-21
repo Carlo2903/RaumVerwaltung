@@ -3,8 +3,11 @@ package de.fhswf.raumverwaltung;
 import atlantafx.base.theme.PrimerLight;
 import de.fhswf.raumverwaltung.db.dao.SchuljahrDao;
 import de.fhswf.raumverwaltung.db.dao.StundenplanDao;
+import de.fhswf.raumverwaltung.db.dao.ZeitslotDao;
 import de.fhswf.raumverwaltung.db.entities.Schuljahr;
 import de.fhswf.raumverwaltung.db.entities.Stundenplan;
+import de.fhswf.raumverwaltung.db.entities.Wochentag;
+import de.fhswf.raumverwaltung.db.entities.Zeitslot;
 import de.fhswf.raumverwaltung.ui.MainFrame;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTabPane;
 import javafx.application.Application;
@@ -22,6 +25,11 @@ public class MainApp extends Application {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         primaryStage = stage;
         mainFrame    = new MainFrame();
+
+        erstelleStandardSchuljahr(); // NEU
+        erstelleZeitslots();         // NEU
+
+
 
         Scene scene = new Scene(mainFrame, 1200, 800);
         stage.setTitle("Schul-Planer Pro 2026");
@@ -51,6 +59,38 @@ public class MainApp extends Application {
         stundenplanDao.persist(stundenplan);
 
         System.out.println("Schuljahr 2025/2026 + Stundenplan angelegt.");
+    }
+
+    private void erstelleZeitslots() {
+        ZeitslotDao dao = new ZeitslotDao();
+        if (!dao.findAll().isEmpty()) return;
+
+        // 6 Stunden pro Tag, Mo–Fr
+        String[][] zeiten = {
+                {"08:00", "08:45"},
+                {"08:45", "09:30"},
+                {"09:45", "10:30"},
+                {"10:30", "11:15"},
+                {"11:30", "12:15"},
+                {"12:15", "13:00"}
+        };
+
+        Wochentag[] tage = {
+                Wochentag.MONTAG, Wochentag.DIENSTAG, Wochentag.MITTWOCH,
+                Wochentag.DONNERSTAG, Wochentag.FREITAG
+        };
+
+        for (Wochentag tag : tage) {
+            for (int i = 0; i < zeiten.length; i++) {
+                Zeitslot z = new Zeitslot();
+                z.setWochentag(tag);
+                z.setStundenNummer(i + 1);
+                z.setStartzeit(java.time.LocalTime.parse(zeiten[i][0]));
+                z.setEndzeit(java.time.LocalTime.parse(zeiten[i][1]));
+                dao.persist(z);
+            }
+        }
+        System.out.println("30 Zeitslots angelegt (6 pro Tag, Mo–Fr).");
     }
 
     // Wird vom LoginViewModel nach erfolgreichem Login aufgerufen

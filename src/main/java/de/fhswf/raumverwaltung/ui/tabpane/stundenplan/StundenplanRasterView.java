@@ -42,6 +42,11 @@ public class StundenplanRasterView extends BorderPane {
                         aktualisiereGrid(viewModel.getGridProperty().get())
         );
 
+        // Null-Check – falls kein Stundenplan existiert
+        viewModel.getGridProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) aktualisiereGrid(newVal);
+        });
+
         viewModel.laden();
     }
 
@@ -200,7 +205,6 @@ public class StundenplanRasterView extends BorderPane {
                         "-fx-cursor: hand;"
         );
 
-        // Hover-Effekt
         zelle.setOnMouseEntered(e -> zelle.setStyle(
                 "-fx-background-color: #f0f4f8;" +
                         "-fx-background-radius: 6;" +
@@ -216,12 +220,17 @@ public class StundenplanRasterView extends BorderPane {
                         "-fx-cursor: hand;"
         ));
 
-        // Klick → Stunde-Bearbeiten-Dialog öffnen
-        zelle.setOnMouseClicked(e ->
-                StundeBearbeitenDialog.zeige(
-                        viewModel, null, tag, stundeNummer
-                )
-        );
+        zelle.setOnMouseClicked(e -> {
+            // NEU: Null-Check – kein Dialog wenn kein Plan existiert
+            if (viewModel.getAktuellerPlan() == null) {
+                new Alert(Alert.AlertType.WARNING,
+                        "Kein aktiver Stundenplan gefunden. " +
+                                "Bitte zuerst ein Schuljahr anlegen.")
+                        .showAndWait();
+                return;
+            }
+            StundeBearbeitenDialog.zeige(viewModel, null, tag, stundeNummer);
+        });
 
         return zelle;
     }

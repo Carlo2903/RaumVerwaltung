@@ -28,6 +28,12 @@ public class KonfliktService {
                 neueStunde.getLehrkraft(), neueStunde.getKlasse()
         );
 
+        // Bei einer bestehenden Stunde (id != null) findet die DB-Abfrage
+        // die Stunde selbst – das ist kein echter Konflikt
+        konflikte = konflikte.stream()
+                .filter(k -> !k.getId().equals(neueStunde.getId()))
+                .toList();
+
         if (!konflikte.isEmpty()) {
             Stunde k = konflikte.get(0);
             String grund;
