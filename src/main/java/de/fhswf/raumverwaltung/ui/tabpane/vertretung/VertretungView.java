@@ -2,6 +2,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.vertretung;
 
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
+import de.fhswf.raumverwaltung.ui.util.EntityStringConverter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -72,6 +73,7 @@ public class VertretungView extends VBox {
         grundBox.getItems().addAll(VertretungsGrund.values());
         grundBox.setValue(VertretungsGrund.KRANK);
         lehrkraftBox.setPromptText("Lehrkraft wählen...");
+        lehrkraftBox.setConverter(EntityStringConverter.forLehrkraft());
 
         Button btnErfassen = new Button("Erfassen");
         btnErfassen.setStyle(

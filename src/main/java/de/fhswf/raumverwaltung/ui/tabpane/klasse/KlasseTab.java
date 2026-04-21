@@ -3,6 +3,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.klasse;
 import de.fhswf.raumverwaltung.db.entities.Klasse;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
+import de.fhswf.raumverwaltung.ui.util.EntityStringConverter;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -18,18 +19,25 @@ public class KlasseTab extends MyTab {
     private final Spinner<Integer>    jahrgangSpinner  = new Spinner<>(5, 10, 5);
     private final ComboBox<Lehrkraft> klassenlehrerBox = new ComboBox<>();
 
+
     public KlasseTab() {
         super("Klassen");
         this.setContent(buildLayout());
         beobachteViewModel();
     }
 
+
+
+
     private void beobachteViewModel() {
         // Lehrkräfte für ComboBox – kommen aus ViewModel
         viewModel.getLehrkraefte().addListener(
                 (ListChangeListener<Lehrkraft>) change ->
                         klassenlehrerBox.setItems(viewModel.getLehrkraefte())
+
         );
+
+
 
         table.getSelectionModel().selectedItemProperty().addListener(
                 (obs, o, n) -> {
@@ -55,6 +63,7 @@ public class KlasseTab extends MyTab {
         jahrgangSpinner.setEditable(true);
         jahrgangSpinner.setPrefWidth(80);
         klassenlehrerBox.setPromptText("Klassenlehrer wählen...");
+        klassenlehrerBox.setConverter(EntityStringConverter.forLehrkraft());
 
         GridPane felder = new GridPane();
         felder.setHgap(12);

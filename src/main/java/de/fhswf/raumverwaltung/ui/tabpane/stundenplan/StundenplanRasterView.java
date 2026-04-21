@@ -1,6 +1,7 @@
 package de.fhswf.raumverwaltung.ui.tabpane.stundenplan;
 
 import de.fhswf.raumverwaltung.db.entities.*;
+import de.fhswf.raumverwaltung.ui.util.EntityStringConverter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -55,6 +56,7 @@ public class StundenplanRasterView extends BorderPane {
 
         ComboBox<Klasse> klasseBox = new ComboBox<>();
         klasseBox.setPromptText("Alle Klassen");
+        klasseBox.setConverter(EntityStringConverter.forKlasse());
 
         // Klassen in ComboBox anzeigen
         viewModel.getKlassenProperty().addListener(

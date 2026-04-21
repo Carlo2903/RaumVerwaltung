@@ -6,6 +6,7 @@ import de.fhswf.raumverwaltung.db.dao.RaumDao;
 import de.fhswf.raumverwaltung.db.dao.ZeitslotDao;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
+import de.fhswf.raumverwaltung.ui.util.EntityStringConverter;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -41,6 +42,11 @@ public class StundeBearbeitenDialog {
         ComboBox<Lehrkraft> lehrerBox   = new ComboBox<>();
         ComboBox<Raum>      raumBox     = new ComboBox<>();
         ComboBox<Klasse>    klasseBox   = new ComboBox<>();
+
+        fachBox.setConverter(EntityStringConverter.forFach());
+        lehrerBox.setConverter(EntityStringConverter.forLehrkraft());
+        raumBox.setConverter(EntityStringConverter.forRaum());
+        klasseBox.setConverter(EntityStringConverter.forKlasse());
 
         fachBox.getItems().addAll(fachDao.findAll());
         lehrerBox.getItems().addAll(lehrkraftDao.findAll());
