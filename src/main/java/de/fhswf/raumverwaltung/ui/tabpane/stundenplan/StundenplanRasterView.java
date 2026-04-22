@@ -237,17 +237,49 @@ public class StundenplanRasterView extends BorderPane {
 
     // Belegte Zelle – zeigt Fach, Lehrer, Raum
     private Pane belegteZelle(Stunde stunde) {
-        VBox zelle = new VBox(2);
-        zelle.setMinHeight(80);
-        zelle.setMaxWidth(Double.MAX_VALUE);
-        zelle.setPadding(new Insets(6));
+        VBox inhalt = new VBox(2);
+        inhalt.setMaxWidth(Double.MAX_VALUE);
+        inhalt.setMaxHeight(Double.MAX_VALUE);
+        inhalt.setPadding(new Insets(6));
 
-        // Farbe je nach Status
         String farbe = stunde.isIstAusfall()    ? "#ffcccc" :
                 stunde.isIstVertretung() ? "#fff3cc" : "#e8f4ea";
         String rand  = stunde.isIstAusfall()    ? "#cf222e" :
                 stunde.isIstVertretung() ? "#bf8700" : "#1a7f37";
 
+        Label lblFach = new Label(
+                stunde.getFach() != null ? stunde.getFach().getKuerzel() : "?"
+        );
+        lblFach.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
+
+        Label lblLehrer = new Label(
+                stunde.getLehrkraft() != null
+                        ? stunde.getLehrkraft().getKuerzel() : "?"
+        );
+        lblLehrer.setStyle("-fx-font-size: 11; -fx-text-fill: #555;");
+
+        Label lblRaum = new Label(
+                stunde.getRaum() != null
+                        ? stunde.getRaum().getBezeichnung() : "?"
+        );
+        lblRaum.setStyle("-fx-font-size: 11; -fx-text-fill: #555;");
+
+        inhalt.getChildren().addAll(lblFach, lblLehrer, lblRaum);
+
+        if (stunde.isIstVertretung()) {
+            Label badge = new Label("⚠ Vertretung");
+            badge.setStyle("-fx-font-size: 10; -fx-text-fill: #bf8700;");
+            inhalt.getChildren().add(badge);
+        } else if (stunde.isIstAusfall()) {
+            Label badge = new Label("✕ Ausfall");
+            badge.setStyle("-fx-font-size: 10; -fx-text-fill: #cf222e;");
+            inhalt.getChildren().add(badge);
+        }
+
+        // StackPane als Wrapper – ermöglicht exakte Positionierung
+        StackPane zelle = new StackPane(inhalt);
+        zelle.setMinHeight(80);
+        zelle.setMaxWidth(Double.MAX_VALUE);
         zelle.setStyle(
                 "-fx-background-color: " + farbe + ";" +
                         "-fx-background-radius: 6;" +
@@ -256,40 +288,50 @@ public class StundenplanRasterView extends BorderPane {
                         "-fx-cursor: hand;"
         );
 
-        // Inhalte
-        Label lblFach = new Label(
-                stunde.getFach() != null ? stunde.getFach().getKuerzel() : "?"
-        );
-        lblFach.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
+        // Zähler oben rechts
+        if (stunde.getFach() != null && stunde.getKlasse() != null) {
+            int aktuell = viewModel.getStundenZaehler(
+                    stunde.getKlasse(), stunde.getFach()
+            );
+            int max = stunde.getFach().getWochenstundenProKlasse();
 
-        Label lblLehrer = new Label(
-                stunde.getLehrkraft() != null ? stunde.getLehrkraft().getKuerzel() : "?"
-        );
-        lblLehrer.setStyle("-fx-font-size: 11; -fx-text-fill: #555;");
+            String zaehlerFarbe = aktuell > max  ? "#cf222e" :
+                    aktuell == max ? "#1a7f37" :
+                            "#bf8700";
 
-        Label lblRaum = new Label(
-                stunde.getRaum() != null ? stunde.getRaum().getBezeichnung() : "?"
-        );
-        lblRaum.setStyle("-fx-font-size: 11; -fx-text-fill: #555;");
+            Label lblZaehler = new Label(aktuell + "/" + max);
+            lblZaehler.setStyle(
+                    "-fx-font-size: 10;" +
+                            "-fx-font-weight: bold;" +
+                            "-fx-text-fill: " + zaehlerFarbe + ";" +
+                            "-fx-padding: 2 4 2 4;" +
+                            "-fx-background-color: rgba(255,255,255,0.7);" +
+                            "-fx-background-radius: 4;"
+            );
 
-        // Vertretungs-Badge
-        if (stunde.isIstVertretung()) {
-            Label badge = new Label("⚠ Vertretung");
-            badge.setStyle("-fx-font-size: 10; -fx-text-fill: #bf8700;");
-            zelle.getChildren().addAll(lblFach, lblLehrer, lblRaum, badge);
-        } else if (stunde.isIstAusfall()) {
-            Label badge = new Label("✕ Ausfall");
-            badge.setStyle("-fx-font-size: 10; -fx-text-fill: #cf222e;");
-            zelle.getChildren().addAll(lblFach, lblLehrer, lblRaum, badge);
-        } else {
-            zelle.getChildren().addAll(lblFach, lblLehrer, lblRaum);
+            // Exakt oben rechts positionieren
+            StackPane.setAlignment(lblZaehler, javafx.geometry.Pos.TOP_RIGHT);
+            StackPane.setMargin(lblZaehler, new Insets(4, 4, 0, 0));
+
+            zelle.getChildren().add(lblZaehler);
         }
 
-        int aktuell = viewModel.getStundenZaehler(
-                stunde.getKlasse(), stunde.getFach()
-        );
+        // Hover-Effekt
+        zelle.setOnMouseEntered(e -> zelle.setStyle(
+                "-fx-background-color: derive(" + farbe + ", -10%);" +
+                        "-fx-background-radius: 6;" +
+                        "-fx-border-color: derive(" + rand + ", -20%);" +
+                        "-fx-border-radius: 6;" +
+                        "-fx-cursor: hand;"
+        ));
+        zelle.setOnMouseExited(e -> zelle.setStyle(
+                "-fx-background-color: " + farbe + ";" +
+                        "-fx-background-radius: 6;" +
+                        "-fx-border-color: " + rand + ";" +
+                        "-fx-border-radius: 6;" +
+                        "-fx-cursor: hand;"
+        ));
 
-        // Klick → Stunde bearbeiten
         zelle.setOnMouseClicked(e ->
                 StundeBearbeitenDialog.zeige(
                         viewModel, stunde,
@@ -297,8 +339,6 @@ public class StundenplanRasterView extends BorderPane {
                         stunde.getZeitslot().getStundenNummer()
                 )
         );
-
-
 
         return zelle;
     }
