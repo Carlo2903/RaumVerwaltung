@@ -19,8 +19,8 @@ public class SchuelerPortalView extends BorderPane {
     // Inhaltsbereich – wird je nach Ansicht ausgetauscht
     private final VBox inhalt = new VBox(8);
 
-    public SchuelerPortalView() {
-        this.viewModel = new SchuelerPortalViewModel();
+    public SchuelerPortalView(SchuelerPortalViewModel viewModel) {
+        this.viewModel = viewModel;
 
         this.setStyle("-fx-background-color: #f5f5f5;");
         this.setTop(buildHeader());

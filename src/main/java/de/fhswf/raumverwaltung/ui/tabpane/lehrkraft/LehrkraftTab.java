@@ -3,6 +3,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
 import de.fhswf.raumverwaltung.db.entities.Fach;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
+import de.fhswf.raumverwaltung.ui.tabpane.Reloadable;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LehrkraftTab extends MyTab {
+public class LehrkraftTab extends MyTab implements Reloadable {
 
     private final LehrkraftTableViewModel viewModel = new LehrkraftTableViewModel();
     private final LehrkraftTable          table     = new LehrkraftTable(viewModel);
@@ -159,5 +160,10 @@ public class LehrkraftTab extends MyTab {
         stdSpinner.getValueFactory().setValue(20);
         fachCheckboxen.values().forEach(cb -> cb.setSelected(false));
         table.getSelectionModel().clearSelection();
+    }
+
+    @Override
+    public void reload() {
+
     }
 }

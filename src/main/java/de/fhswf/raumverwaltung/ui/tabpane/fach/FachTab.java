@@ -2,12 +2,13 @@ package de.fhswf.raumverwaltung.ui.tabpane.fach;
 
 import de.fhswf.raumverwaltung.db.entities.Fach;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
+import de.fhswf.raumverwaltung.ui.tabpane.Reloadable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-public class FachTab extends MyTab {
+public class FachTab extends MyTab implements Reloadable {
 
     private final FachTableViewModel viewModel = new FachTableViewModel();
     private final FachTable          table     = new FachTable(viewModel);
@@ -119,5 +120,10 @@ public class FachTab extends MyTab {
         kuerzelField.clear();
         stundenSpinner.getValueFactory().setValue(4);
         table.getSelectionModel().clearSelection();
+    }
+
+    @Override
+    public void reload() {
+
     }
 }

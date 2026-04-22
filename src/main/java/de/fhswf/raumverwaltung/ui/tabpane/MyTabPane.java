@@ -15,16 +15,25 @@ public class MyTabPane extends TabPane {
 
     private static MyTabPane instance;
 
-    private final RaumTab          raumTab          = new RaumTab();
-    private final LehrkraftTab     lehrkraftTab     = new LehrkraftTab();
-    private final FachTab          fachTab          = new FachTab();
-    private final KlasseTab        klasseTab        = new KlasseTab();
-    private final StundenplanTab   stundenplanTab   = new StundenplanTab();
-    private final VertretungTab    vertretungTab    = new VertretungTab();
-    private final SchuelerPortalTab schuelerTab     = new SchuelerPortalTab();
+    private final RaumTab           raumTab        = new RaumTab();
+    private final LehrkraftTab      lehrkraftTab   = new LehrkraftTab();
+    private final FachTab           fachTab        = new FachTab();
+    private final KlasseTab         klasseTab      = new KlasseTab();
+    private final StundenplanTab    stundenplanTab = new StundenplanTab();
+    private final VertretungTab     vertretungTab  = new VertretungTab();
+    private final SchuelerPortalTab schuelerTab    = new SchuelerPortalTab();
 
     private MyTabPane() {
         this.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
+
+        // NEU: Listener einmal hier – nicht in addTabs()
+        this.getSelectionModel().selectedItemProperty().addListener(
+                (obs, alterTab, neuerTab) -> {
+                    if (neuerTab instanceof Reloadable reloadable) {
+                        reloadable.reload();
+                    }
+                }
+        );
     }
 
     public static MyTabPane getInstance() {
@@ -46,20 +55,16 @@ public class MyTabPane extends TabPane {
 
         switch (benutzer.getRolle()) {
             case ADMINISTRATOR -> this.getTabs().addAll(
-                    raumTab,
-                    lehrkraftTab,
-                    fachTab,
-                    klasseTab,
-                    stundenplanTab,
-                    vertretungTab
+                    raumTab, lehrkraftTab, fachTab, klasseTab,
+                    stundenplanTab, vertretungTab
             );
             case LEHRER -> this.getTabs().addAll(
-                    stundenplanTab,
-                    vertretungTab
+                    stundenplanTab, vertretungTab
             );
             case SCHUELER -> this.getTabs().addAll(
                     schuelerTab
             );
         }
+
     }
 }

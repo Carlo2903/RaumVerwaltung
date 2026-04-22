@@ -3,12 +3,13 @@ package de.fhswf.raumverwaltung.ui.tabpane.raum;
 import de.fhswf.raumverwaltung.db.entities.Raum;
 import de.fhswf.raumverwaltung.db.entities.RaumTyp;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
+import de.fhswf.raumverwaltung.ui.tabpane.Reloadable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-public class RaumTab extends MyTab {
+public class RaumTab extends MyTab implements Reloadable {
 
     private final RaumTableViewModel viewModel = new RaumTableViewModel();
     private final RaumTable          table     = new RaumTable(viewModel);
@@ -132,5 +133,10 @@ public class RaumTab extends MyTab {
         raumtypBox.setValue(RaumTyp.STANDARD);
         kapazitaetSpinner.getValueFactory().setValue(30);
         table.getSelectionModel().clearSelection();
+    }
+
+    @Override
+    public void reload() {
+
     }
 }

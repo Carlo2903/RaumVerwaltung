@@ -3,6 +3,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.klasse;
 import de.fhswf.raumverwaltung.db.entities.Klasse;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
+import de.fhswf.raumverwaltung.ui.tabpane.Reloadable;
 import de.fhswf.raumverwaltung.ui.util.EntityStringConverter;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
@@ -10,7 +11,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
-public class KlasseTab extends MyTab {
+public class KlasseTab extends MyTab implements Reloadable {
 
     private final KlasseTableViewModel  viewModel = new KlasseTableViewModel();
     private final KlasseTable           table     = new KlasseTable(viewModel);
@@ -138,5 +139,10 @@ public class KlasseTab extends MyTab {
         jahrgangSpinner.getValueFactory().setValue(5);
         klassenlehrerBox.setValue(null);
         table.getSelectionModel().clearSelection();
+    }
+
+    @Override
+    public void reload() {
+
     }
 }

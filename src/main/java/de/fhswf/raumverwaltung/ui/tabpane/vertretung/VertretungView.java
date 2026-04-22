@@ -28,8 +28,10 @@ public class VertretungView extends VBox {
     // Sektion 3 – Verfügbare Lehrer
     private final FlowPane                 kandidatenPane = new FlowPane();
 
-    public VertretungView() {
-        this.viewModel = new VertretungViewModel();
+
+    // NEU: ViewModel wird übergeben
+    public VertretungView(VertretungViewModel viewModel) {
+        this.viewModel = viewModel;
 
         this.setSpacing(16);
         this.setPadding(new Insets(16));
@@ -41,25 +43,20 @@ public class VertretungView extends VBox {
                 buildSektion3()
         );
 
-        // Auf Updates reagieren
         viewModel.getLehrkraefteProperty().addListener(
-                (obs, o, n) -> {
-                    if (n != null) lehrkraftBox.setItems(n);
-                }
+                (obs, o, n) -> { if (n != null) lehrkraftBox.setItems(n); }
         );
-
         viewModel.getBetroffeneStundenProperty().addListener(
-                (obs, o, n) -> {
-                    if (n != null) stundenTable.setItems(n);
-                }
+                (obs, o, n) -> { if (n != null) stundenTable.setItems(n); }
         );
-
         viewModel.getVerfuegbareLehrerProperty().addListener(
                 (obs, o, n) -> aktualisiereKandidaten(n)
         );
 
         viewModel.laden();
     }
+
+
 
     // ---------------------------------------------------------------
     // Sektion 1: Abwesenheit erfassen
