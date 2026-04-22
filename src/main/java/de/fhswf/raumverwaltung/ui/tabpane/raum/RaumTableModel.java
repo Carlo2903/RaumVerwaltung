@@ -28,6 +28,7 @@ public class RaumTableModel extends Observable {
     }
 
     public void loadAll() {
+        raumDao.clearCache();
         this.raeume = raumDao.findAll();
         setChanged();
         notifyObservers();

@@ -143,6 +143,6 @@ public class KlasseTab extends MyTab implements Reloadable {
 
     @Override
     public void reload() {
-
+        viewModel.refresh();
     }
 }

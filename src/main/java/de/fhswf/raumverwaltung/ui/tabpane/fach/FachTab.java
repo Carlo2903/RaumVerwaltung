@@ -124,6 +124,6 @@ public class FachTab extends MyTab implements Reloadable {
 
     @Override
     public void reload() {
-
+        viewModel.refresh();
     }
 }

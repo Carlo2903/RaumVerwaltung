@@ -164,6 +164,6 @@ public class LehrkraftTab extends MyTab implements Reloadable {
 
     @Override
     public void reload() {
-
+        viewModel.refresh();
     }
 }

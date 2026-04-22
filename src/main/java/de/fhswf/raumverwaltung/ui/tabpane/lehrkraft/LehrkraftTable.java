@@ -6,16 +6,16 @@ public class LehrkraftTable extends TableView<LehrkraftTableEntity> {
 
     public LehrkraftTable(LehrkraftTableViewModel viewModel) {
 
-        TableColumn<LehrkraftTableEntity, String>  colName    = new TableColumn<>("Name");
-        TableColumn<LehrkraftTableEntity, String>  colKuerzel = new TableColumn<>("Kürzel");
-        TableColumn<LehrkraftTableEntity, String>  colFaecher = new TableColumn<>("Fächer");
-        TableColumn<LehrkraftTableEntity, Number>  colStd     = new TableColumn<>("Std/W");
+        TableColumn<LehrkraftTableEntity, String> colName = new TableColumn<>("Name");
+        TableColumn<LehrkraftTableEntity, String> colKuerzel = new TableColumn<>("Kürzel");
+        TableColumn<LehrkraftTableEntity, String> colFaecher = new TableColumn<>("Fächer");
+        TableColumn<LehrkraftTableEntity, Number> colStd = new TableColumn<>("Std/W");
 
         // Lambda statt PropertyValueFactory – typsicher, kein Reflection
-        colName.setCellValueFactory(data    -> data.getValue().nameProperty());
+        colName.setCellValueFactory(data -> data.getValue().nameProperty());
         colKuerzel.setCellValueFactory(data -> data.getValue().kuerzelProperty());
         colFaecher.setCellValueFactory(data -> data.getValue().faecherProperty());
-        colStd.setCellValueFactory(data     -> data.getValue().sollStundenProperty());
+        colStd.setCellValueFactory(data -> data.getValue().sollStundenProperty());
 
         colName.setPrefWidth(200);
         colKuerzel.setPrefWidth(80);
@@ -23,8 +23,15 @@ public class LehrkraftTable extends TableView<LehrkraftTableEntity> {
         colStd.setPrefWidth(80);
 
         this.getColumns().addAll(colName, colKuerzel, colFaecher, colStd);
-        this.itemsProperty().bind(viewModel.getLehrkraefteProperty());
+        viewModel.getLehrkraefteProperty().addListener(
+                (obs, o, n) -> {
+                    if (n != null) setItems(n);
+                }
+        );
 
-        viewModel.refresh();
+        // Initial setzen falls schon Daten da sind
+        if (viewModel.getLehrkraefteProperty().get() != null) {
+            setItems(viewModel.getLehrkraefteProperty().get());
+        }
     }
 }

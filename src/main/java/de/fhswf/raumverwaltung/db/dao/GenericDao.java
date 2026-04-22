@@ -74,6 +74,9 @@ public abstract class GenericDao<T> implements Dao<T> {
     @Override
     @SuppressWarnings("unchecked")
     public List<T> findAll() {
-        return entityManager.createQuery("Select t from " + persistentClass.getSimpleName() + " t").getResultList();
+        return entityManager
+                .createQuery(
+                        "Select t from " + persistentClass.getSimpleName() + " t")
+                .getResultList();
     }
 }

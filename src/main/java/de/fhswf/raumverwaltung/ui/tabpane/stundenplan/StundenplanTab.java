@@ -5,14 +5,16 @@ import de.fhswf.raumverwaltung.ui.tabpane.Reloadable;
 
 public class StundenplanTab extends MyTab implements Reloadable {
 
+    private final StundenplanViewModel viewModel;
+
     public StundenplanTab() {
         super("Stundenplan");
-        StundenplanViewModel viewModel = new StundenplanViewModel();
+        this.viewModel = new StundenplanViewModel(); // NEU
         this.setContent(new StundenplanRasterView(viewModel));
     }
 
     @Override
     public void reload() {
-
+        viewModel.laden();
     }
 }

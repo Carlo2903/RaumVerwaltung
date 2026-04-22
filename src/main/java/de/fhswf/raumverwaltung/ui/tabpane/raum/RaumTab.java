@@ -137,6 +137,6 @@ public class RaumTab extends MyTab implements Reloadable {
 
     @Override
     public void reload() {
-
+        viewModel.refresh();
     }
 }

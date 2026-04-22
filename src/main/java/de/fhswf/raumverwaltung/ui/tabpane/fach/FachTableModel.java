@@ -1,6 +1,7 @@
 package de.fhswf.raumverwaltung.ui.tabpane.fach;
 
 import de.fhswf.raumverwaltung.db.dao.FachDao;
+import de.fhswf.raumverwaltung.db.dao.LehrkraftDao;
 import de.fhswf.raumverwaltung.db.entities.Fach;
 import de.fhswf.raumverwaltung.db.entities.Klasse;
 
@@ -12,6 +13,8 @@ public class FachTableModel extends Observable {
 
     private static FachTableModel instance;
     private final FachDao dao = new FachDao();
+    private final LehrkraftDao lehrkraftDao = new LehrkraftDao();
+
     private List<Fach> faecher = new ArrayList<>();
 
     private FachTableModel() {}
@@ -32,6 +35,7 @@ public class FachTableModel extends Observable {
     }
 
     public void loadAll() {
+        dao.clearCache();
         faecher = dao.findAll();
         setChanged();
         notifyObservers();
@@ -47,6 +51,7 @@ public class FachTableModel extends Observable {
     }
 
     public void loeschen(Fach fach) {
+        lehrkraftDao.entferneFachAusAllenLehrkraeften(fach);
         dao.remove(fach);
         loadAll();
     }

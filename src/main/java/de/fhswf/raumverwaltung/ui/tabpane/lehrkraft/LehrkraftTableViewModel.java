@@ -16,17 +16,15 @@ import java.util.stream.Collectors;
 public class LehrkraftTableViewModel implements Observer {
 
     private final LehrkraftTableModel model;
-
-    // DAO nur hier – nie in der View
-    private final FachDao fachDao = new FachDao();
+    private final FachDao             fachDao = new FachDao();
 
     @Getter
     private final ObjectProperty<ObservableList<LehrkraftTableEntity>> lehrkraefteProperty
             = new SimpleObjectProperty<>();
 
-    // Alle Fächer für Checkboxen in der View
     @Getter
-    private final ObservableList<Fach> faecher = FXCollections.observableArrayList();
+    private final ObservableList<Fach> faecher
+            = FXCollections.observableArrayList();
 
     @Getter
     private final StringProperty fehlerProperty = new SimpleStringProperty();
@@ -40,26 +38,26 @@ public class LehrkraftTableViewModel implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
+        // Cache leeren damit Fächer frisch geladen werden
+        fachDao.clearCache();
+
         List<LehrkraftTableEntity> tmp = model.getLehrkraefte().stream()
                 .map(LehrkraftTableEntity::new)
                 .collect(Collectors.toList());
         lehrkraefteProperty.set(FXCollections.observableList(tmp));
+
+        // Fächer-Liste für Checkboxen neu laden
+        faecher.setAll(fachDao.findAll());
     }
 
     public void refresh() {
         model.loadAll();
-        lehrkraefteProperty.set(
-                FXCollections.observableList(model.getLehrkraefte().stream()
-                        .map(LehrkraftTableEntity::new)
-                        .collect(Collectors.toList()))
-        );
-        // setAll() feuert immer – egal ob Inhalt gleich ist
-        faecher.setAll(fachDao.findAll());
     }
 
     public void speichern(String name, String kuerzel,
-                          int sollStunden, List<Fach> faecher) {
+                          int sollStunden, List<Fach> gewaehlteFaecher) {
         fehlerProperty.set(null);
+
         if (name.isBlank()) {
             fehlerProperty.set("Name darf nicht leer sein.");
             return;
@@ -74,7 +72,7 @@ public class LehrkraftTableViewModel implements Observer {
                     .name(name)
                     .kuerzel(kuerzel)
                     .sollStunden(sollStunden)
-                    .faecher(faecher)
+                    .faecher(new ArrayList<>(gewaehlteFaecher))
                     .sperrzeiten(new ArrayList<>())
                     .build();
             model.speichern(neu);
@@ -83,7 +81,7 @@ public class LehrkraftTableViewModel implements Observer {
             aktuellerDatensatz.setKuerzel(kuerzel);
             aktuellerDatensatz.setSollStunden(sollStunden);
             aktuellerDatensatz.getFaecher().clear();
-            aktuellerDatensatz.getFaecher().addAll(faecher);
+            aktuellerDatensatz.getFaecher().addAll(gewaehlteFaecher);
             model.speichern(aktuellerDatensatz);
         }
 

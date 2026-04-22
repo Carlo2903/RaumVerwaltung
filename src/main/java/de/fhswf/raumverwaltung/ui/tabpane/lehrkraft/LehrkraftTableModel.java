@@ -32,6 +32,7 @@ public class LehrkraftTableModel extends Observable {
     }
 
     public void loadAll() {
+        dao.clearCache();
         lehrkraefte = dao.findAll();
         setChanged();
         notifyObservers();

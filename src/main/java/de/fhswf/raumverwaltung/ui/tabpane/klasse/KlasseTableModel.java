@@ -32,6 +32,7 @@ public class KlasseTableModel extends Observable {
     }
 
     public void loadAll() {
+        dao.clearCache();
         klassen = dao.findAll();
         setChanged();
         notifyObservers();
