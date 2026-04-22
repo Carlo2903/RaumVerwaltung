@@ -49,5 +49,34 @@ public class KonfliktService {
 
             throw new PlanungException("Stundenplan-Konflikt", grund);
         }
+        validiereWochenstunden(neueStunde);
+    }
+
+
+    private void validiereWochenstunden(Stunde neueStunde) throws PlanungException {
+        if (neueStunde.getFach() == null || neueStunde.getKlasse() == null) return;
+
+        int maxStunden = neueStunde.getFach().getWochenstundenProKlasse();
+
+        long bereitsVorhanden = stundeDao
+                .findeNachKlasseUndFach(
+                        neueStunde.getKlasse(),
+                        neueStunde.getFach()
+                )
+                .stream()
+                // NEU: null-sicherer Vergleich
+                .filter(s -> neueStunde.getId() == null
+                        || !s.getId().equals(neueStunde.getId()))
+                .count();
+
+        if (bereitsVorhanden >= maxStunden) {
+            throw new PlanungException(
+                    "Wochenstunden überschritten",
+                    "Klasse '" + neueStunde.getKlasse().getBezeichnung() +
+                            "' hat bereits " + bereitsVorhanden + " von " +
+                            maxStunden + " Wochenstunden in '" +
+                            neueStunde.getFach().getBezeichnung() + "'."
+            );
+        }
     }
 }

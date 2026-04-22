@@ -56,4 +56,16 @@ public class StundeDao extends GenericDao<Stunde> {
                 .getResultList();
     }
 
+    public List<Stunde> findeNachKlasseUndFach(Klasse klasse, Fach fach) {
+        clearCache();
+        return entityManager
+                .createQuery(
+                        "SELECT s FROM Stunde s " +
+                                "WHERE s.klasse = :klasse " +
+                                "AND s.fach = :fach",
+                        Stunde.class)
+                .setParameter("klasse", klasse)
+                .setParameter("fach", fach)
+                .getResultList();
+    }
 }
