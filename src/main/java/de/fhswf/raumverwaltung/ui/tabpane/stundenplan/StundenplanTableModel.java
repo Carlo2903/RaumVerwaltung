@@ -47,6 +47,9 @@ public class StundenplanTableModel extends Observable {
     @Getter
     private List<Zeitslot> alleZeitslots = new ArrayList<>();
 
+    @Getter
+    private Map<String, Integer> stundenZaehler = new HashMap<>();
+
     private final ZeitslotDao zeitslotDao = new ZeitslotDao();
 
     private StundenplanTableModel() {}
@@ -119,6 +122,7 @@ public class StundenplanTableModel extends Observable {
     // Grid aus den Stunden des aktiven Plans aufbauen
     private void bauGrid() {
         stundenGrid = new HashMap<>();
+        stundenZaehler = new HashMap<>();
 
         // Alle Wochentage initialisieren
         for (Wochentag tag : Wochentag.values()) {
@@ -134,6 +138,14 @@ public class StundenplanTableModel extends Observable {
         //Cache leeren damit neue Stunde auch gefunden wird
         stundeDao.clearCache();
         List<Stunde> aktuelleStunden = stundeDao.findeNachStundenplan(aktuellerPlan);
+
+        // Zähler für alle Klasse+Fach-Kombinationen vorberechnen
+        aktuelleStunden.forEach(s -> {
+            if (s.getKlasse() != null && s.getFach() != null) {
+                String key = s.getKlasse().getId() + "_" + s.getFach().getId();
+                stundenZaehler.merge(key, 1, Integer::sum);
+            }
+        });
 
         // Stunden filtern (nach id falls gesetzt) und ins Grid eintragen
         aktuelleStunden.stream()

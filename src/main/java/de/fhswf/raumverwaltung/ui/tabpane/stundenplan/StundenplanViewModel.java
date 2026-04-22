@@ -82,4 +82,10 @@ public class StundenplanViewModel implements Observer {
                 .findFirst();
     }
 
+    public int getStundenZaehler(Klasse klasse, Fach fach) {
+        if (klasse == null || fach == null) return 0;
+        String key = klasse.getId() + "_" + fach.getId();
+        return model.getStundenZaehler().getOrDefault(key, 0);
+    }
+
 }

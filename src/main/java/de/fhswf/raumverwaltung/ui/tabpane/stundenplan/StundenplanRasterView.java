@@ -285,6 +285,10 @@ public class StundenplanRasterView extends BorderPane {
             zelle.getChildren().addAll(lblFach, lblLehrer, lblRaum);
         }
 
+        int aktuell = viewModel.getStundenZaehler(
+                stunde.getKlasse(), stunde.getFach()
+        );
+
         // Klick → Stunde bearbeiten
         zelle.setOnMouseClicked(e ->
                 StundeBearbeitenDialog.zeige(
@@ -293,6 +297,8 @@ public class StundenplanRasterView extends BorderPane {
                         stunde.getZeitslot().getStundenNummer()
                 )
         );
+
+
 
         return zelle;
     }
