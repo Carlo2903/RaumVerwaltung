@@ -1,12 +1,13 @@
 package de.fhswf.raumverwaltung.service;
 
 import de.fhswf.raumverwaltung.db.dao.BenutzerDao;
-import de.fhswf.raumverwaltung.db.entities.Benutzer;
+import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Optional;
 
 public class BenutzerService {
@@ -28,6 +29,10 @@ public class BenutzerService {
 
     public Benutzer login(String benutzername, String passwort) throws PlanungException {
         String hash = hashPasswort(passwort);
+
+        System.out.println("Benutzername: " + benutzername);
+        System.out.println("Hash: " + hash);
+
         Optional<Benutzer> benutzer = benutzerDao.findeNachLogin(benutzername, hash);
 
         if (benutzer.isEmpty()) {
@@ -51,6 +56,9 @@ public class BenutzerService {
         return aktuellerBenutzer != null;
     }
 
+
+
+
     // SHA-256 Hash – reicht für ein Uni-Projekt
     private String hashPasswort(String passwort) throws PlanungException {
         try {
@@ -60,5 +68,33 @@ public class BenutzerService {
         } catch (NoSuchAlgorithmException e) {
             throw new PlanungException("Systemfehler", "Passwort konnte nicht verarbeitet werden.");
         }
+    }
+
+    public void erstelleBenutzerFallsNichtVorhanden(
+            List<Lehrkraft> lehrkraefte, List<Klasse> klassen) throws PlanungException {
+
+        String lehrerPasswortHash   = hashPasswort("lehrer123");
+        String schuelerPasswortHash = hashPasswort("schueler123");
+
+        lehrkraefte.forEach(lehrkraft -> {
+            String benutzername = lehrkraft.getKuerzel().toLowerCase();
+
+            // Nur nach Benutzername prüfen – nicht nach Passwort
+            if (benutzerDao.findeNachBenutzername(benutzername).isEmpty()) {
+                benutzerDao.persist(new LehrerBenutzer(
+                        benutzername, lehrerPasswortHash, lehrkraft
+                ));
+            }
+        });
+
+        klassen.forEach(klasse -> {
+            String benutzername = klasse.getBezeichnung().toLowerCase();
+
+            if (benutzerDao.findeNachBenutzername(benutzername).isEmpty()) {
+                benutzerDao.persist(new SchuelerBenutzer(
+                        benutzername, schuelerPasswortHash, klasse
+                ));
+            }
+        });
     }
 }

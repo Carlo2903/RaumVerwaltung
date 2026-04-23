@@ -1,13 +1,13 @@
 package de.fhswf.raumverwaltung;
 
 import atlantafx.base.theme.PrimerLight;
-import de.fhswf.raumverwaltung.db.dao.SchuljahrDao;
-import de.fhswf.raumverwaltung.db.dao.StundenplanDao;
-import de.fhswf.raumverwaltung.db.dao.ZeitslotDao;
+import de.fhswf.raumverwaltung.db.dao.*;
 import de.fhswf.raumverwaltung.db.entities.Schuljahr;
 import de.fhswf.raumverwaltung.db.entities.Stundenplan;
 import de.fhswf.raumverwaltung.db.entities.Wochentag;
 import de.fhswf.raumverwaltung.db.entities.Zeitslot;
+import de.fhswf.raumverwaltung.db.exception.PlanungException;
+import de.fhswf.raumverwaltung.service.BenutzerService;
 import de.fhswf.raumverwaltung.ui.MainFrame;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTabPane;
 import javafx.application.Application;
@@ -21,13 +21,14 @@ public class MainApp extends Application {
     private static MainFrame mainFrame;
 
     @Override
-    public void start(Stage stage) {
+    public void start(Stage stage) throws PlanungException {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         primaryStage = stage;
         mainFrame    = new MainFrame();
 
-        erstelleStandardSchuljahr(); // NEU
-        erstelleZeitslots();         // NEU
+        erstelleStandardSchuljahr();
+        erstelleZeitslots();
+        erstelleBenutzer();
 
 
 
@@ -91,6 +92,13 @@ public class MainApp extends Application {
             }
         }
         System.out.println("30 Zeitslots angelegt (6 pro Tag, Mo–Fr).");
+    }
+
+    private void erstelleBenutzer() throws PlanungException {
+        BenutzerService.getInstance().erstelleBenutzerFallsNichtVorhanden(
+                new LehrkraftDao().findAll(),
+                new KlasseDao().findAll()
+        );
     }
 
     // Wird vom LoginViewModel nach erfolgreichem Login aufgerufen
