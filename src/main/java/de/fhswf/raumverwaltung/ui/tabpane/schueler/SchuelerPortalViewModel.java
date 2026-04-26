@@ -2,6 +2,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.schueler;
 
 import de.fhswf.raumverwaltung.db.entities.Klasse;
 import de.fhswf.raumverwaltung.db.entities.Stunde;
+import de.fhswf.raumverwaltung.ui.util.VertretungUtil;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import lombok.Getter;
@@ -69,5 +70,11 @@ public class SchuelerPortalViewModel implements Observer {
         datum = datum.substring(0, 1).toUpperCase() + datum.substring(1);
 
         titelProperty.set(klassenName + " – " + datum);
+    }
+
+    public String getVertretungslehrerName(Stunde stunde) {
+        return VertretungUtil.getVertretungslehrerName(
+                stunde, model.getVertretungenProStunde()
+        );
     }
 }

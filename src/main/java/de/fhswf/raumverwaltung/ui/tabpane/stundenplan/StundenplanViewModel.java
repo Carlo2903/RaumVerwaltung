@@ -3,6 +3,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.stundenplan;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.service.KonfliktService;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
+import de.fhswf.raumverwaltung.ui.util.VertretungUtil;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import lombok.Getter;
@@ -88,4 +89,9 @@ public class StundenplanViewModel implements Observer {
         return model.getStundenZaehler().getOrDefault(key, 0);
     }
 
+    public String getVertretungslehrerName(Stunde stunde) {
+        return VertretungUtil.getVertretungslehrerName(
+                stunde, model.getVertretungenProStunde()
+        );
+    }
 }

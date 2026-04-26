@@ -18,6 +18,7 @@ public class VertretungsService {
     private final VertretungDao  vertretungDao  = new VertretungDao();
     private final StundeDao      stundeDao      = new StundeDao();
 
+
     private VertretungsService() {}
 
     public static VertretungsService getInstance() {
@@ -94,6 +95,9 @@ public class VertretungsService {
                 .build();
 
         vertretungDao.persist(vertretung);
+
+        stunde.setIstVertretung(true);
+        stundeDao.merge(stunde);
         return vertretung;
     }
 

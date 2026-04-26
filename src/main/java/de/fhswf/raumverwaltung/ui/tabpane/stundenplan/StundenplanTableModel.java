@@ -50,6 +50,11 @@ public class StundenplanTableModel extends Observable {
     @Getter
     private Map<String, Integer> stundenZaehler = new HashMap<>();
 
+    @Getter
+    private Map<Long, Vertretung> vertretungenProStunde = new HashMap<>();
+
+    private final VertretungDao vertretungDao = new VertretungDao();
+
     private final ZeitslotDao zeitslotDao = new ZeitslotDao();
 
     private StundenplanTableModel() {}
@@ -123,6 +128,7 @@ public class StundenplanTableModel extends Observable {
     private void bauGrid() {
         stundenGrid = new HashMap<>();
         stundenZaehler = new HashMap<>();
+        vertretungenProStunde = new HashMap<>();
 
         // Alle Wochentage initialisieren
         for (Wochentag tag : Wochentag.values()) {
@@ -138,6 +144,10 @@ public class StundenplanTableModel extends Observable {
         //Cache leeren damit neue Stunde auch gefunden wird
         stundeDao.clearCache();
         List<Stunde> aktuelleStunden = stundeDao.findeNachStundenplan(aktuellerPlan);
+
+
+        vertretungDao.findeNachStundenplan(aktuellerPlan)
+                .forEach(v -> vertretungenProStunde.put(v.getStunde().getId(), v));
 
         // Zähler für alle Klasse+Fach-Kombinationen vorberechnen
         aktuelleStunden.forEach(s -> {

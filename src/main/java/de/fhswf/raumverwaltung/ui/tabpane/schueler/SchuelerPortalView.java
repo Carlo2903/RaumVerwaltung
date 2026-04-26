@@ -196,17 +196,16 @@ public class SchuelerPortalView extends BorderPane {
     // ---------------------------------------------------------------
 
     private HBox buildStundenKarte(Stunde stunde) {
-        // Farben je nach Status (Ampelsystem aus Mockup)
         String hintergrund;
         String textFarbe;
-        String badge = null;
+        String badge;
 
         if (stunde.isIstAusfall()) {
-            hintergrund = "#c0392b";  // Rot
+            hintergrund = "#c0392b";
             textFarbe   = "white";
             badge       = "✕ Ausfall";
         } else if (stunde.isIstVertretung()) {
-            hintergrund = "#f39c12";  // Gelb/Orange
+            hintergrund = "#f39c12";
             textFarbe   = "white";
             badge       = "⚠ Vertretung";
         } else {
@@ -215,10 +214,9 @@ public class SchuelerPortalView extends BorderPane {
             badge       = null;
         }
 
-        // Zeit
         String startzeit = stunde.getZeitslot().getStartzeit().toString();
         String endzeit   = stunde.getZeitslot().getEndzeit().toString();
-        Label lblZeit    = new Label(startzeit + " - " + endzeit);
+        Label lblZeit = new Label(startzeit + " - " + endzeit);
         lblZeit.setStyle(
                 "-fx-min-width: 100;" +
                         "-fx-text-fill: " + (stunde.isIstAusfall() || stunde.isIstVertretung()
@@ -226,22 +224,32 @@ public class SchuelerPortalView extends BorderPane {
                         "-fx-font-size: 12;"
         );
 
-        // Fach + Lehrer/Raum
-        String fachName   = stunde.getFach()      != null
-                ? stunde.getFach().getBezeichnung()   : "–";
-        String lehrerInfo = stunde.getLehrkraft() != null
-                ? stunde.getLehrkraft().getName() +
-                " (" + stunde.getLehrkraft().getKuerzel() + ")" : "–";
-        String raumInfo   = stunde.getRaum()      != null
+        String fachName = stunde.getFach() != null
+                ? stunde.getFach().getBezeichnung() : "–";
+
+        // NEU: raumInfo VOR lblDetails deklarieren
+        String raumInfo = stunde.getRaum() != null
                 ? "| " + stunde.getRaum().getBezeichnung() : "";
 
-        Label lblFach   = new Label(fachName);
+        String lehrerInfo;
+        if (stunde.isIstVertretung()) {
+            String vertretungsName = viewModel.getVertretungslehrerName(stunde);
+            lehrerInfo = vertretungsName + " (Vertretung)";
+        } else {
+            lehrerInfo = stunde.getLehrkraft() != null
+                    ? stunde.getLehrkraft().getName() +
+                    " (" + stunde.getLehrkraft().getKuerzel() + ")"
+                    : "–";
+        }
+
+        Label lblFach = new Label(fachName);
         lblFach.setStyle(
                 "-fx-font-weight: bold;" +
                         "-fx-font-size: 14;" +
                         "-fx-text-fill: " + textFarbe + ";"
         );
 
+        // NEU: nur einmal deklariert
         Label lblDetails = new Label(lehrerInfo + " " + raumInfo);
         lblDetails.setStyle(
                 "-fx-font-size: 11;" +
@@ -258,7 +266,6 @@ public class SchuelerPortalView extends BorderPane {
         karte.setPadding(new Insets(12, 16, 12, 16));
         karte.setMaxWidth(Double.MAX_VALUE);
 
-        // Badge rechts (Vertretung / Ausfall)
         if (badge != null) {
             Label lblBadge = new Label(badge);
             lblBadge.setStyle(
@@ -274,7 +281,6 @@ public class SchuelerPortalView extends BorderPane {
                         "-fx-background-radius: 8;" +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 2);";
 
-        // Grüner linker Rand bei normalem Unterricht (wie im Mockup)
         if (!stunde.isIstAusfall() && !stunde.isIstVertretung()) {
             stil += "-fx-border-color: transparent transparent transparent #1a7f37;" +
                     "-fx-border-width: 0 0 0 4;" +

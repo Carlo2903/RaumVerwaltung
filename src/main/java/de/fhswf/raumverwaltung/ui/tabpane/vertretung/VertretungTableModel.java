@@ -92,30 +92,28 @@ public class VertretungTableModel extends Observable {
                                    LocalDate datum) throws PlanungException {
         if (ausgewaehlteStunde == null) return;
 
+        // Service kümmert sich um alles – inklusive istVertretung setzen
         vertretungsService.weiseVertretungZu(
                 ausgewaehlteStunde, vertretungsLehrer,
                 datum, aktuelleAbwesenheit.getGrund(),
                 aktuelleAbwesenheit.getBemerkung()
         );
 
-        // Stunde als Vertretung markieren
-        ausgewaehlteStunde.setIstVertretung(true);
-
-        // Betroffene Stunden neu laden
         betroffeneStunden = vertretungsService.findeBetroffeneStunden(
                 aktuelleAbwesenheit
         );
+        ladeVertretungen();
         ausgewaehlteStunde = null;
         verfuegbareLehrer  = new ArrayList<>();
         setChanged();
-        ladeVertretungen();
         notifyObservers();
     }
     private void ladeVertretungen() {
         vertretungenProStunde = new HashMap<>();
-        if (aktuelleAbwesenheit == null) return;
+        if (betroffeneStunden.isEmpty()) return;
 
-        vertretungDao.findeNachDatum(aktuelleAbwesenheit.getVon())
+        // Alle Vertretungen für alle betroffenen Stunden laden
+        vertretungDao.findeNachStunden(betroffeneStunden)
                 .forEach(v -> vertretungenProStunde.put(v.getStunde().getId(), v));
     }
 

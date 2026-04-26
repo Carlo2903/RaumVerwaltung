@@ -23,13 +23,14 @@ public class StundeDao extends GenericDao<Stunde> {
     // Stunden einer Lehrkraft an bestimmten Wochentagen (für Vertretungsplanung)
     public List<Stunde> findeNachLehrkraftUndWochentage(Lehrkraft lehrkraft,
                                                         List<Wochentag> wochentage) {
-        if (wochentage.isEmpty()) {
-            return List.of();
-        }
-
+        if (wochentage.isEmpty()) return List.of();
+        clearCache();
         return entityManager
                 .createQuery(
                         "SELECT s FROM Stunde s " +
+                                "LEFT JOIN FETCH s.fach " +
+                                "LEFT JOIN FETCH s.klasse " +
+                                "LEFT JOIN FETCH s.zeitslot " +
                                 "WHERE s.lehrkraft = :lk " +
                                 "AND s.zeitslot.wochentag IN :tage",
                         Stunde.class)
@@ -39,9 +40,16 @@ public class StundeDao extends GenericDao<Stunde> {
     }
 
     public List<Stunde> findeNachStundenplan(Stundenplan stundenplan) {
+        clearCache();
         return entityManager
                 .createQuery(
-                        "SELECT s FROM Stunde s WHERE s.stundenplan = :plan",
+                        "SELECT s FROM Stunde s " +
+                                "LEFT JOIN FETCH s.fach " +
+                                "LEFT JOIN FETCH s.lehrkraft " +
+                                "LEFT JOIN FETCH s.raum " +
+                                "LEFT JOIN FETCH s.klasse " +
+                                "LEFT JOIN FETCH s.zeitslot " +
+                                "WHERE s.stundenplan = :plan",
                         Stunde.class)
                 .setParameter("plan", stundenplan)
                 .getResultList();

@@ -44,4 +44,17 @@ public class VertretungDao extends GenericDao<Vertretung> {
                 .setParameter("stunden", stunden)
                 .getResultList();
     }
+
+    public List<Vertretung> findeNachStundenplan(Stundenplan stundenplan) {
+        clearCache();
+        return entityManager
+                .createQuery(
+                        "SELECT v FROM Vertretung v " +
+                                "LEFT JOIN FETCH v.vertretungsLehrer " +
+                                "LEFT JOIN FETCH v.stunde " +
+                                "WHERE v.stunde.stundenplan = :plan",
+                        Vertretung.class)
+                .setParameter("plan", stundenplan)
+                .getResultList();
+    }
 }

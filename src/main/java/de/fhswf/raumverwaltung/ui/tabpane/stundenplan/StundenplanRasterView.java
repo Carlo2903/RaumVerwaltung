@@ -2,13 +2,11 @@ package de.fhswf.raumverwaltung.ui.tabpane.stundenplan;
 
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.ui.util.EntityStringConverter;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.*;
 
 import java.util.Map;
 
@@ -16,16 +14,11 @@ public class StundenplanRasterView extends BorderPane {
 
     private final StundenplanViewModel viewModel;
 
-    // Wochentage als Spalten
     private static final Wochentag[] TAGE = {
-            Wochentag.MONTAG,
-            Wochentag.DIENSTAG,
-            Wochentag.MITTWOCH,
-            Wochentag.DONNERSTAG,
-            Wochentag.FREITAG
+            Wochentag.MONTAG, Wochentag.DIENSTAG, Wochentag.MITTWOCH,
+            Wochentag.DONNERSTAG, Wochentag.FREITAG
     };
 
-    // Anzahl Stunden pro Tag
     private static final int STUNDEN_PRO_TAG = 6;
 
     private final GridPane grid = new GridPane();
@@ -36,13 +29,13 @@ public class StundenplanRasterView extends BorderPane {
         this.setTop(buildHeader());
         this.setCenter(buildGrid());
 
-        // ListChangeListener statt ObjectProperty ChangeListener
+        // ListChangeListener – zuverlässiger als ObjectProperty
         viewModel.getStundenListe().addListener(
-                (javafx.collections.ListChangeListener<Stunde>) change ->
+                (ListChangeListener<Stunde>) change ->
                         aktualisiereGrid(viewModel.getGridProperty().get())
         );
 
-        // Null-Check – falls kein Stundenplan existiert
+        // Null-Check falls kein Plan existiert
         viewModel.getGridProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) aktualisiereGrid(newVal);
         });
@@ -64,19 +57,16 @@ public class StundenplanRasterView extends BorderPane {
         klasseBox.setPromptText("Alle Klassen");
         klasseBox.setConverter(EntityStringConverter.forKlasse());
 
-        // Klassen in ComboBox anzeigen
         viewModel.getKlassenProperty().addListener(
                 (obs, oldVal, newVal) -> {
                     if (newVal != null) klasseBox.setItems(newVal);
                 }
         );
 
-        // Klasse wählen → Filter anwenden
         klasseBox.setOnAction(e ->
                 viewModel.filterNachKlasse(klasseBox.getValue())
         );
 
-        // "Alle" Button
         Button btnAlle = new Button("Alle");
         btnAlle.setOnAction(e -> {
             klasseBox.setValue(null);
@@ -87,9 +77,11 @@ public class StundenplanRasterView extends BorderPane {
                 lblKlasse, klasseBox, btnAlle);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(12, 16, 12, 16));
-        header.setStyle("-fx-background-color: white; " +
-                "-fx-border-color: #e0e0e0; " +
-                "-fx-border-width: 0 0 1 0;");
+        header.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 0 0 1 0;"
+        );
         return header;
     }
 
@@ -103,7 +95,6 @@ public class StundenplanRasterView extends BorderPane {
         grid.setPadding(new Insets(12));
         grid.setStyle("-fx-background-color: #f5f5f5;");
 
-        // Spaltenbreiten gleichmäßig verteilen
         // Spalte 0 = Zeitslot-Label (schmal)
         ColumnConstraints colZeit = new ColumnConstraints();
         colZeit.setPrefWidth(60);
@@ -117,20 +108,19 @@ public class StundenplanRasterView extends BorderPane {
         }
 
         // Kopfzeile: Wochentage
-        grid.add(new Label(""), 0, 0); // leere Ecke
+        grid.add(new Label(""), 0, 0);
         for (int i = 0; i < TAGE.length; i++) {
             Label tagLabel = new Label(TAGE[i].name().substring(0, 2));
-            tagLabel.setStyle(
-                    "-fx-font-weight: bold; " +
-                            "-fx-font-size: 13; " +
-                            "-fx-alignment: center;"
-            );
             tagLabel.setMaxWidth(Double.MAX_VALUE);
             tagLabel.setAlignment(Pos.CENTER);
             tagLabel.setPadding(new Insets(6));
-            tagLabel.setStyle(tagLabel.getStyle() +
-                    "-fx-background-color: #3d5a80; -fx-text-fill: white; " +
-                    "-fx-background-radius: 6;");
+            tagLabel.setStyle(
+                    "-fx-font-weight: bold;" +
+                            "-fx-font-size: 13;" +
+                            "-fx-background-color: #3d5a80;" +
+                            "-fx-text-fill: white;" +
+                            "-fx-background-radius: 6;"
+            );
             grid.add(tagLabel, i + 1, 0);
         }
 
@@ -141,7 +131,6 @@ public class StundenplanRasterView extends BorderPane {
             stdLabel.setPadding(new Insets(4));
             grid.add(stdLabel, 0, stunde);
 
-            // Leere Zellen als Platzhalter
             for (int tag = 0; tag < TAGE.length; tag++) {
                 grid.add(leereZelle(TAGE[tag], stunde), tag + 1, stunde);
             }
@@ -164,9 +153,9 @@ public class StundenplanRasterView extends BorderPane {
             for (int tagIdx = 0; tagIdx < TAGE.length; tagIdx++) {
                 Wochentag tag = TAGE[tagIdx];
 
-                // Alte Zelle entfernen
                 final int col = tagIdx + 1;
                 final int row = stunde;
+
                 grid.getChildren().removeIf(node ->
                         GridPane.getColumnIndex(node) != null &&
                                 GridPane.getColumnIndex(node) == col &&
@@ -174,7 +163,6 @@ public class StundenplanRasterView extends BorderPane {
                                 GridPane.getRowIndex(node) == row
                 );
 
-                // Neue Zelle setzen
                 Stunde s = stundenGrid
                         .getOrDefault(tag, Map.of())
                         .get(stunde);
@@ -192,7 +180,6 @@ public class StundenplanRasterView extends BorderPane {
     // Zellen
     // ---------------------------------------------------------------
 
-    // Leere Zelle – klickbar um neue Stunde anzulegen
     private Pane leereZelle(Wochentag tag, int stundeNummer) {
         VBox zelle = new VBox();
         zelle.setMinHeight(80);
@@ -221,7 +208,6 @@ public class StundenplanRasterView extends BorderPane {
         ));
 
         zelle.setOnMouseClicked(e -> {
-            // NEU: Null-Check – kein Dialog wenn kein Plan existiert
             if (viewModel.getAktuellerPlan() == null) {
                 new Alert(Alert.AlertType.WARNING,
                         "Kein aktiver Stundenplan gefunden. " +
@@ -235,36 +221,37 @@ public class StundenplanRasterView extends BorderPane {
         return zelle;
     }
 
-    // Belegte Zelle – zeigt Fach, Lehrer, Raum
     private Pane belegteZelle(Stunde stunde) {
-        VBox inhalt = new VBox(2);
-        inhalt.setMaxWidth(Double.MAX_VALUE);
-        inhalt.setMaxHeight(Double.MAX_VALUE);
-        inhalt.setPadding(new Insets(6));
-
         String farbe = stunde.isIstAusfall()    ? "#ffcccc" :
                 stunde.isIstVertretung() ? "#fff3cc" : "#e8f4ea";
         String rand  = stunde.isIstAusfall()    ? "#cf222e" :
                 stunde.isIstVertretung() ? "#bf8700" : "#1a7f37";
 
-        Label lblFach = new Label(
-                stunde.getFach() != null ? stunde.getFach().getKuerzel() : "?"
-        );
+        // Lehrer: bei Vertretung den Vertretungslehrer anzeigen
+        String lehrerText;
+        if (stunde.isIstVertretung()) {
+            lehrerText = viewModel.getVertretungslehrerName(stunde) + " (V)";
+        } else {
+            lehrerText = stunde.getLehrkraft() != null
+                    ? stunde.getLehrkraft().getKuerzel() : "?";
+        }
+
+        Label lblFach   = new Label(stunde.getFach() != null
+                ? stunde.getFach().getKuerzel() : "?");
         lblFach.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
 
-        Label lblLehrer = new Label(
-                stunde.getLehrkraft() != null
-                        ? stunde.getLehrkraft().getKuerzel() : "?"
-        );
+        Label lblLehrer = new Label(lehrerText);
         lblLehrer.setStyle("-fx-font-size: 11; -fx-text-fill: #555;");
 
-        Label lblRaum = new Label(
-                stunde.getRaum() != null
-                        ? stunde.getRaum().getBezeichnung() : "?"
-        );
+        Label lblRaum   = new Label(stunde.getRaum() != null
+                ? stunde.getRaum().getBezeichnung() : "?");
         lblRaum.setStyle("-fx-font-size: 11; -fx-text-fill: #555;");
 
-        inhalt.getChildren().addAll(lblFach, lblLehrer, lblRaum);
+        // Alles in VBox – keine Überlappung
+        VBox inhalt = new VBox(2, lblFach, lblLehrer, lblRaum);
+        inhalt.setPadding(new Insets(6));
+        inhalt.setMaxWidth(Double.MAX_VALUE);
+        inhalt.setMaxHeight(Double.MAX_VALUE);
 
         if (stunde.isIstVertretung()) {
             Label badge = new Label("⚠ Vertretung");
@@ -276,7 +263,7 @@ public class StundenplanRasterView extends BorderPane {
             inhalt.getChildren().add(badge);
         }
 
-        // StackPane als Wrapper – ermöglicht exakte Positionierung
+        // StackPane nur für Zähler oben rechts
         StackPane zelle = new StackPane(inhalt);
         zelle.setMinHeight(80);
         zelle.setMaxWidth(Double.MAX_VALUE);
@@ -288,7 +275,7 @@ public class StundenplanRasterView extends BorderPane {
                         "-fx-cursor: hand;"
         );
 
-        // Zähler oben rechts
+        // Zähler oben rechts – nur im StackPane
         if (stunde.getFach() != null && stunde.getKlasse() != null) {
             int aktuell = viewModel.getStundenZaehler(
                     stunde.getKlasse(), stunde.getFach()
@@ -308,15 +295,12 @@ public class StundenplanRasterView extends BorderPane {
                             "-fx-background-color: rgba(255,255,255,0.7);" +
                             "-fx-background-radius: 4;"
             );
-
-            // Exakt oben rechts positionieren
-            StackPane.setAlignment(lblZaehler, javafx.geometry.Pos.TOP_RIGHT);
+            StackPane.setAlignment(lblZaehler, Pos.TOP_RIGHT);
             StackPane.setMargin(lblZaehler, new Insets(4, 4, 0, 0));
-
             zelle.getChildren().add(lblZaehler);
         }
 
-        // Hover-Effekt
+        // Hover
         zelle.setOnMouseEntered(e -> zelle.setStyle(
                 "-fx-background-color: derive(" + farbe + ", -10%);" +
                         "-fx-background-radius: 6;" +

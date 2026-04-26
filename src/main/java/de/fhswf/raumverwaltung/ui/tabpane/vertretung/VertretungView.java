@@ -3,6 +3,8 @@ package de.fhswf.raumverwaltung.ui.tabpane.vertretung;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
 import de.fhswf.raumverwaltung.ui.util.EntityStringConverter;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -66,6 +68,7 @@ public class VertretungView extends VBox {
     // ---------------------------------------------------------------
 
     private VBox buildSektion1() {
+        lehrkraftBox.setItems(viewModel.getLehrkraefte());
         Label titel = new Label("① Abwesenheit erfassen");
         titel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
 
@@ -142,9 +145,13 @@ public class VertretungView extends VBox {
                 )
         );
         colStatus.setCellValueFactory(data -> {
-            String status = data.getValue().isIstVertretung()
-                    ? "✓ Zugewiesen" : "⚠ Offen";
-            return new javafx.beans.property.SimpleStringProperty(status);
+            Stunde stunde = data.getValue();
+            if (stunde.isIstVertretung()) {
+                // NEU: Vertretungslehrer-Name anzeigen
+                String name = viewModel.getVertretungslehrerName(stunde);
+                return new SimpleStringProperty("✓ " + name);
+            }
+            return new SimpleStringProperty("⚠ Offen");
         });
 
         // Status-Zelle färben

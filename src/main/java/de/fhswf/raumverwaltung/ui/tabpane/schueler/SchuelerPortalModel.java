@@ -1,18 +1,13 @@
 package de.fhswf.raumverwaltung.ui.tabpane.schueler;
 
-import de.fhswf.raumverwaltung.db.dao.StundeDao;
-import de.fhswf.raumverwaltung.db.dao.StundenplanDao;
-import de.fhswf.raumverwaltung.db.dao.SchuljahrDao;
+import de.fhswf.raumverwaltung.db.dao.*;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.service.BenutzerService;
 import lombok.Getter;
 
-import java.time.LocalDate;
 import java.time.DayOfWeek;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Observable;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 
 public class SchuelerPortalModel extends Observable {
 
@@ -21,22 +16,29 @@ public class SchuelerPortalModel extends Observable {
     private final StundeDao      stundeDao      = new StundeDao();
     private final StundenplanDao stundenplanDao = new StundenplanDao();
     private final SchuljahrDao   schuljahrDao   = new SchuljahrDao();
+    private final VertretungDao  vertretungDao  = new VertretungDao();
 
-    // Aktuell angezeigtes Datum
     @Getter
     private LocalDate aktuellesDatum = LocalDate.now();
 
-    // Klasse des eingeloggten Schülers
     @Getter
     private Klasse aktuelleKlasse = null;
 
-    // Stunden des aktuellen Tages
     @Getter
     private List<Stunde> tagesStunden = new ArrayList<>();
 
-    // Stunden der aktuellen Woche (Mo–Fr)
     @Getter
     private List<Stunde> wochenStunden = new ArrayList<>();
+
+    // NEU: Vertretungen für Anzeige
+    @Getter
+    private Map<Long, Vertretung> vertretungenProStunde = new HashMap<>();
+
+    // Gecachter Plan – nur einmal laden
+    private Stundenplan aktuellerPlan = null;
+
+    private List<Stunde> alleStunden = new ArrayList<>();
+
 
     private SchuelerPortalModel() {}
 
@@ -47,23 +49,34 @@ public class SchuelerPortalModel extends Observable {
         return instance;
     }
 
-    // Initiales Laden – Klasse aus eingeloggtem Benutzer
     public void laden() {
         Benutzer benutzer = BenutzerService.getInstance().getAktuellerBenutzer();
-
         if (benutzer instanceof SchuelerBenutzer schueler) {
             aktuelleKlasse = schueler.getKlasse();
         }
 
+        schuljahrDao.clearCache();
+        stundenplanDao.clearCache();
+        Optional<Schuljahr> schuljahr = schuljahrDao.findeAktives();
+        if (schuljahr.isEmpty()) return;
+
+        List<Stundenplan> plaene = stundenplanDao.findeNachSchuljahr(schuljahr.get());
+        if (plaene.isEmpty()) return;
+
+        aktuellerPlan = plaene.get(0);
+
+        // NEU: alle Stunden einmal laden
+        stundeDao.clearCache();
+        alleStunden = stundeDao.findeNachStundenplan(aktuellerPlan);
+
+        ladeVertretungen();
         ladeAktuellenTag();
         ladeAktuelleWoche();
     }
 
-    // Einen Tag vor / zurück navigieren
     public void navigiereTage(int tage) {
         aktuellesDatum = aktuellesDatum.plusDays(tage);
 
-        // Wochenende überspringen
         if (aktuellesDatum.getDayOfWeek() == DayOfWeek.SATURDAY) {
             aktuellesDatum = aktuellesDatum.plusDays(tage > 0 ? 2 : -1);
         }
@@ -75,7 +88,6 @@ public class SchuelerPortalModel extends Observable {
         ladeAktuelleWoche();
     }
 
-    // Zurück auf heute
     public void navigiereHeute() {
         aktuellesDatum = LocalDate.now();
         ladeAktuellenTag();
@@ -86,15 +98,22 @@ public class SchuelerPortalModel extends Observable {
     // Private Hilfsmethoden
     // ---------------------------------------------------------------
 
+    private void ladeVertretungen() {
+        vertretungenProStunde = new HashMap<>();
+        if (aktuellerPlan == null) return;
+
+        vertretungDao.findeNachStundenplan(aktuellerPlan)
+                .forEach(v -> vertretungenProStunde.put(v.getStunde().getId(), v));
+    }
+
     private void ladeAktuellenTag() {
-        if (aktuelleKlasse == null) {
+        if (aktuelleKlasse == null || aktuellerPlan == null) {
             tagesStunden = new ArrayList<>();
             setChanged();
             notifyObservers();
             return;
         }
 
-        // Wochentag des aktuellen Datums bestimmen
         Wochentag wochentag = mappeWochentag(aktuellesDatum.getDayOfWeek());
         if (wochentag == null) {
             tagesStunden = new ArrayList<>();
@@ -103,57 +122,57 @@ public class SchuelerPortalModel extends Observable {
             return;
         }
 
-        // Stunden der Klasse an diesem Wochentag laden
-        tagesStunden = ladeStundenFuerKlasseUndTag(aktuelleKlasse, wochentag);
+        tagesStunden = filterStunden(aktuelleKlasse, wochentag);
+        setChanged();
+        notifyObservers();
 
         setChanged();
         notifyObservers();
     }
 
     private void ladeAktuelleWoche() {
-        if (aktuelleKlasse == null) {
+        if (aktuelleKlasse == null || aktuellerPlan == null) {
             wochenStunden = new ArrayList<>();
             return;
         }
 
         wochenStunden = new ArrayList<>();
-
-        // Montag der aktuellen Woche
         LocalDate montag = aktuellesDatum.with(DayOfWeek.MONDAY);
 
         for (int i = 0; i < 5; i++) {
-            LocalDate tag = montag.plusDays(i);
-            Wochentag wochentag = mappeWochentag(tag.getDayOfWeek());
+            Wochentag wochentag = mappeWochentag(montag.plusDays(i).getDayOfWeek());
             if (wochentag != null) {
-                wochenStunden.addAll(
-                        ladeStundenFuerKlasseUndTag(aktuelleKlasse, wochentag)
-                );
+                // Aus bereits geladener Liste filtern – kein DB-Query
+                wochenStunden.addAll(filterStunden(aktuelleKlasse, wochentag));
             }
         }
     }
 
+    private List<Stunde> filterStunden(Klasse klasse, Wochentag wochentag) {
+        return alleStunden.stream()
+                .filter(s -> s.getKlasse() != null &&
+                        s.getKlasse().getId().equals(klasse.getId()) &&
+                        s.getZeitslot().getWochentag() == wochentag)
+                .sorted(Comparator.comparingInt(s -> s.getZeitslot().getStundenNummer()))
+                .toList();
+    }
+
+
     private List<Stunde> ladeStundenFuerKlasseUndTag(Klasse klasse,
                                                      Wochentag wochentag) {
-        // Aktiven Stundenplan laden
-        Optional<Schuljahr> schuljahr = schuljahrDao.findeAktives();
-        if (schuljahr.isEmpty()) return new ArrayList<>();
+        stundeDao.clearCache();
 
-        List<Stundenplan> plaene = stundenplanDao.findeNachSchuljahr(schuljahr.get());
-        if (plaene.isEmpty()) return new ArrayList<>();
-
-        // Stunden filtern: nur diese Klasse + dieser Wochentag
-        return plaene.get(0).getStunden().stream()
+        // NEU: stundeDao.findeNachStundenplan() statt getStunden()
+        return stundeDao.findeNachStundenplan(aktuellerPlan).stream()
                 .filter(s -> s.getKlasse() != null &&
-                        s.getKlasse().equals(klasse) &&
+                        s.getKlasse().getId().equals(klasse.getId()) &&
                         s.getZeitslot().getWochentag() == wochentag)
-                .sorted((a, b) -> Integer.compare(
-                        a.getZeitslot().getStundenNummer(),
-                        b.getZeitslot().getStundenNummer()
+                .sorted(Comparator.comparingInt(
+                        s -> s.getZeitslot().getStundenNummer()
                 ))
                 .toList();
     }
 
-    // Java DayOfWeek → eigenes Wochentag-Enum
     private Wochentag mappeWochentag(DayOfWeek day) {
         return switch (day) {
             case MONDAY    -> Wochentag.MONTAG;
@@ -161,7 +180,7 @@ public class SchuelerPortalModel extends Observable {
             case WEDNESDAY -> Wochentag.MITTWOCH;
             case THURSDAY  -> Wochentag.DONNERSTAG;
             case FRIDAY    -> Wochentag.FREITAG;
-            default        -> null; // Wochenende
+            default        -> null;
         };
     }
 }
