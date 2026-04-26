@@ -3,6 +3,8 @@ package de.fhswf.raumverwaltung.service;
 import de.fhswf.raumverwaltung.db.dao.BenutzerDao;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
+import lombok.Getter;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -16,6 +18,7 @@ public class BenutzerService {
     private final BenutzerDao benutzerDao = new BenutzerDao();
 
     // Aktuell eingeloggter Benutzer
+    @Getter
     private Benutzer aktuellerBenutzer;
 
     private BenutzerService() {}
@@ -48,15 +51,9 @@ public class BenutzerService {
         aktuellerBenutzer = null;
     }
 
-    public Benutzer getAktuellerBenutzer() {
-        return aktuellerBenutzer;
-    }
-
     public boolean istEingeloggt() {
         return aktuellerBenutzer != null;
     }
-
-
 
 
     // SHA-256 Hash – reicht für ein Uni-Projekt
@@ -70,6 +67,15 @@ public class BenutzerService {
         }
     }
 
+    public void erstelleAdminFallsNichtVorhanden() throws PlanungException {
+        if (benutzerDao.findeNachBenutzername("admin").isPresent()) return;
+
+        benutzerDao.persist(new AdminBenutzer(
+                "admin", hashPasswort("admin123")
+        ));
+        System.out.println("Admin angelegt: admin / admin123");
+    }
+
     public void erstelleBenutzerFallsNichtVorhanden(
             List<Lehrkraft> lehrkraefte, List<Klasse> klassen) throws PlanungException {
 
@@ -78,8 +84,6 @@ public class BenutzerService {
 
         lehrkraefte.forEach(lehrkraft -> {
             String benutzername = lehrkraft.getKuerzel().toLowerCase();
-
-            // Nur nach Benutzername prüfen – nicht nach Passwort
             if (benutzerDao.findeNachBenutzername(benutzername).isEmpty()) {
                 benutzerDao.persist(new LehrerBenutzer(
                         benutzername, lehrerPasswortHash, lehrkraft
@@ -89,12 +93,12 @@ public class BenutzerService {
 
         klassen.forEach(klasse -> {
             String benutzername = klasse.getBezeichnung().toLowerCase();
-
             if (benutzerDao.findeNachBenutzername(benutzername).isEmpty()) {
                 benutzerDao.persist(new SchuelerBenutzer(
                         benutzername, schuelerPasswortHash, klasse
                 ));
             }
         });
+
     }
 }

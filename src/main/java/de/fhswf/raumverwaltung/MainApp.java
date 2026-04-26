@@ -2,10 +2,7 @@ package de.fhswf.raumverwaltung;
 
 import atlantafx.base.theme.PrimerLight;
 import de.fhswf.raumverwaltung.db.dao.*;
-import de.fhswf.raumverwaltung.db.entities.Schuljahr;
-import de.fhswf.raumverwaltung.db.entities.Stundenplan;
-import de.fhswf.raumverwaltung.db.entities.Wochentag;
-import de.fhswf.raumverwaltung.db.entities.Zeitslot;
+import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
 import de.fhswf.raumverwaltung.service.BenutzerService;
 import de.fhswf.raumverwaltung.ui.MainFrame;
@@ -25,7 +22,7 @@ public class MainApp extends Application {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         primaryStage = stage;
         mainFrame    = new MainFrame();
-
+        erstelleAdmin();
         erstelleStandardSchuljahr();
         erstelleZeitslots();
         erstelleBenutzer();
@@ -94,12 +91,38 @@ public class MainApp extends Application {
         System.out.println("30 Zeitslots angelegt (6 pro Tag, Mo–Fr).");
     }
 
-    private void erstelleBenutzer() throws PlanungException {
-        BenutzerService.getInstance().erstelleBenutzerFallsNichtVorhanden(
-                new LehrkraftDao().findAll(),
-                new KlasseDao().findAll()
-        );
+    private void erstelleBenutzer() {
+        try {
+            BenutzerService.getInstance().erstelleBenutzerFallsNichtVorhanden(
+                    new LehrkraftDao().findAll(),
+                    new KlasseDao().findAll()
+            );
+        } catch (PlanungException e) {
+            System.err.println("Fehler beim Anlegen der Benutzer: " + e.getMessage());
+        }
     }
+
+
+    private void erstelleAdmin() {
+        try {
+            BenutzerService.getInstance().erstelleAdminFallsNichtVorhanden();
+        } catch (PlanungException e) {
+            System.err.println("Fehler: " + e.getMessage());
+        }
+    }
+
+    private String hashPasswort(String passwort) {
+        try {
+            java.security.MessageDigest digest =
+                    java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(
+                    passwort.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return java.util.HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     // Wird vom LoginViewModel nach erfolgreichem Login aufgerufen
     public static void showMainContent() {
