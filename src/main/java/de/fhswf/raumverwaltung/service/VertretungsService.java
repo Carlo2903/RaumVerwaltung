@@ -74,11 +74,13 @@ public class VertretungsService {
     public Vertretung weiseVertretungZu(Stunde stunde, Lehrkraft vertretungsLehrer,
                                         LocalDate datum, VertretungsGrund grund,
                                         String bemerkung) throws PlanungException {
-        List<Lehrkraft> kandidaten = findeVertretungskandidaten(
-                stunde.getZeitslot(), datum
-        );
+        List<Lehrkraft> kandidaten = findeVertretungskandidaten(stunde.getZeitslot(), datum);
 
-        if (!kandidaten.contains(vertretungsLehrer)) {
+        // ID-Vergleich statt Objekt-Vergleich – verschiedene Hibernate-Instanzen
+        boolean istVerfuegbar = kandidaten.stream()
+                .anyMatch(k -> k.getId().equals(vertretungsLehrer.getId()));
+
+        if (!istVerfuegbar) {
             throw new PlanungException(
                     "Konflikt",
                     "Die Lehrkraft '" + vertretungsLehrer.getName() +
@@ -98,6 +100,7 @@ public class VertretungsService {
 
         stunde.setIstVertretung(true);
         stundeDao.merge(stunde);
+
         return vertretung;
     }
 
