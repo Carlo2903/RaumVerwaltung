@@ -4,6 +4,7 @@ import atlantafx.base.theme.PrimerLight;
 import de.fhswf.raumverwaltung.db.dao.*;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
+import de.fhswf.raumverwaltung.service.AutoRefreshService;
 import de.fhswf.raumverwaltung.service.BenutzerService;
 import de.fhswf.raumverwaltung.ui.MainFrame;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTabPane;
@@ -111,21 +112,11 @@ public class MainApp extends Application {
         }
     }
 
-    private String hashPasswort(String passwort) {
-        try {
-            java.security.MessageDigest digest =
-                    java.security.MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(
-                    passwort.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            return java.util.HexFormat.of().formatHex(hash);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
 
     // Wird vom LoginViewModel nach erfolgreichem Login aufgerufen
     public static void showMainContent() {
         mainFrame.hideLogin();
+        AutoRefreshService.getInstance().starten();
     }
 }
