@@ -122,10 +122,8 @@ public class SchuelerPortalModel extends Observable {
             return;
         }
 
-        tagesStunden = filterStunden(aktuelleKlasse, wochentag);
-        setChanged();
-        notifyObservers();
-
+        // NEU: aktuellesDatum als drittes Argument
+        tagesStunden = filterStunden(aktuelleKlasse, wochentag, aktuellesDatum);
         setChanged();
         notifyObservers();
     }
@@ -140,21 +138,27 @@ public class SchuelerPortalModel extends Observable {
         LocalDate montag = aktuellesDatum.with(DayOfWeek.MONDAY);
 
         for (int i = 0; i < 5; i++) {
-            Wochentag wochentag = mappeWochentag(montag.plusDays(i).getDayOfWeek());
+            LocalDate tag = montag.plusDays(i);
+            Wochentag wochentag = mappeWochentag(tag.getDayOfWeek());
             if (wochentag != null) {
-                // Aus bereits geladener Liste filtern – kein DB-Query
-                wochenStunden.addAll(filterStunden(aktuelleKlasse, wochentag));
+                wochenStunden.addAll(filterStunden(aktuelleKlasse, wochentag, tag));
             }
         }
     }
-
-    private List<Stunde> filterStunden(Klasse klasse, Wochentag wochentag) {
+    private List<Stunde> filterStunden(Klasse klasse, Wochentag wochentag, LocalDate datum) {
         return alleStunden.stream()
                 .filter(s -> s.getKlasse() != null &&
                         s.getKlasse().getId().equals(klasse.getId()) &&
                         s.getZeitslot().getWochentag() == wochentag)
                 .sorted(Comparator.comparingInt(s -> s.getZeitslot().getStundenNummer()))
                 .toList();
+    }
+
+    // Vertretung nur wenn Datum in Abwesenheitszeitraum liegt
+    public boolean hatVertretungAmDatum(Stunde stunde, LocalDate datum) {
+        Vertretung v = vertretungenProStunde.get(stunde.getId());
+        if (v == null) return false;
+        return v.getDatum().equals(datum);
     }
 
 
@@ -182,5 +186,11 @@ public class SchuelerPortalModel extends Observable {
             case FRIDAY    -> Wochentag.FREITAG;
             default        -> null;
         };
+    }
+
+     public void navigiereWochen(int wochen) {
+        aktuellesDatum = aktuellesDatum.plusWeeks(wochen);
+        ladeAktuellenTag();
+        ladeAktuelleWoche();
     }
 }

@@ -8,6 +8,7 @@ import javafx.beans.property.*;
 import javafx.collections.*;
 import lombok.Getter;
 
+import java.time.LocalDate;
 import java.util.*;
 
 public class StundenplanViewModel implements Observer {
@@ -77,10 +78,7 @@ public class StundenplanViewModel implements Observer {
     }
 
     public Optional<Zeitslot> findeZeitslot(Wochentag tag, int stundenNummer) {
-        return model.getAlleZeitslots().stream()
-                .filter(z -> z.getWochentag() == tag
-                        && z.getStundenNummer() == stundenNummer)
-                .findFirst();
+        return model.findeZeitslot(tag, stundenNummer);
     }
 
     public int getStundenZaehler(Klasse klasse, Fach fach) {
@@ -89,6 +87,14 @@ public class StundenplanViewModel implements Observer {
         return model.getStundenZaehler().getOrDefault(key, 0);
     }
 
+    // Mit Datum – für SchuelerPortalView:
+    public String getVertretungslehrerName(Stunde stunde, LocalDate datum) {
+        return VertretungUtil.getVertretungslehrerName(
+                stunde, model.getVertretungenProStunde(), datum
+        );
+    }
+
+    // Ohne Datum – für StundenplanRasterView:
     public String getVertretungslehrerName(Stunde stunde) {
         return VertretungUtil.getVertretungslehrerName(
                 stunde, model.getVertretungenProStunde()

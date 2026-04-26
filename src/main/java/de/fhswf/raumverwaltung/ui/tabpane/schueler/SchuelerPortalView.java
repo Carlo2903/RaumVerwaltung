@@ -7,39 +7,57 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+
 public class SchuelerPortalView extends BorderPane {
 
     private final SchuelerPortalViewModel viewModel;
 
-    // Ansichts-Umschalter
-    private final ToggleButton btnHeute    = new ToggleButton("Heute");
-    private final ToggleButton btnWoche    = new ToggleButton("Woche");
-    private final ToggleButton btnMeineKlasse = new ToggleButton("Meine Klasse");
+    // Ansichts-Umschalter – nur noch zwei
+    private final ToggleButton btnHeute = new ToggleButton("Heute");
+    private final ToggleButton btnWoche = new ToggleButton("Woche");
 
-    // Inhaltsbereich – wird je nach Ansicht ausgetauscht
+    // Navigation – einmal erstellt, nicht in aktualisiereNavigation()
+    private final Button btnTagZurueck   = new Button("← Zurück");
+    private final Button btnTagVor       = new Button("Weiter →");
+    private final Button btnWocheZurueck = new Button("← Vorherige Woche");
+    private final Button btnWocheVor     = new Button("Nächste Woche →");
+
+    // Titel – einmal erstellt und gebunden
+    private final Label lblTitel = new Label();
+
+    // Navigationsbereich – wird je nach Ansicht befüllt
+    private final HBox navigationBox = new HBox(12);
+
+    // Inhaltsbereich
     private final VBox inhalt = new VBox(8);
 
     public SchuelerPortalView(SchuelerPortalViewModel viewModel) {
         this.viewModel = viewModel;
 
+        // Titel einmal binden
+        lblTitel.textProperty().bind(viewModel.getTitelProperty());
+        lblTitel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
+        lblTitel.setMaxWidth(Double.MAX_VALUE);
+        lblTitel.setAlignment(Pos.CENTER);
+        HBox.setHgrow(lblTitel, Priority.ALWAYS);
+
         this.setStyle("-fx-background-color: #f5f5f5;");
         this.setTop(buildHeader());
         this.setCenter(buildInhalt());
 
-        // Auf Model-Updates reagieren
+        // Observer – View nur einmal aktualisieren
         viewModel.getTagesStundenProperty().addListener(
-                (obs, o, n) -> {
-                    if (btnHeute.isSelected()) zeigeTagsansicht();
-                }
+                (obs, o, n) -> { if (btnHeute.isSelected()) zeigeTagsansicht(); }
         );
         viewModel.getWochenStundenProperty().addListener(
-                (obs, o, n) -> {
-                    if (btnWoche.isSelected()) zeigeWochenansicht();
-                }
+                (obs, o, n) -> { if (btnWoche.isSelected()) zeigeWochenansicht(); }
         );
 
         viewModel.laden();
         btnHeute.setSelected(true);
+        aktualisiereNavigation();
         zeigeTagsansicht();
     }
 
@@ -51,45 +69,33 @@ public class SchuelerPortalView extends BorderPane {
         Label titel = new Label("Schüler-Portal");
         titel.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
 
-        // Ansichts-Toggle
         ToggleGroup gruppe = new ToggleGroup();
         btnHeute.setToggleGroup(gruppe);
         btnWoche.setToggleGroup(gruppe);
-        btnMeineKlasse.setToggleGroup(gruppe);
 
-        // Stil
-        String toggleStyle =
-                "-fx-background-radius: 0;" +
+        btnHeute.setStyle(
+                "-fx-background-radius: 6 0 0 6;" +
                         "-fx-border-color: #3d5a80;" +
-                        "-fx-min-width: 120;";
-        btnHeute.setStyle(toggleStyle + "-fx-background-radius: 6 0 0 6;");
-        btnWoche.setStyle(toggleStyle);
-        btnMeineKlasse.setStyle(toggleStyle + "-fx-background-radius: 0 6 6 0;");
+                        "-fx-min-width: 120;"
+        );
+        btnWoche.setStyle(
+                "-fx-background-radius: 0 6 6 0;" +
+                        "-fx-border-color: #3d5a80;" +
+                        "-fx-min-width: 120;"
+        );
 
+        // Toggle-Wechsel → Navigation + Ansicht aktualisieren
         gruppe.selectedToggleProperty().addListener((obs, o, n) -> {
-            if (n == btnHeute)       zeigeTagsansicht();
-            else if (n == btnWoche)  zeigeWochenansicht();
+            aktualisiereNavigation();
+            if (n == btnHeute)      zeigeTagsansicht();
+            else if (n == btnWoche) zeigeWochenansicht();
         });
 
-        HBox toggleBox = new HBox(btnHeute, btnWoche, btnMeineKlasse);
+        HBox toggleBox = new HBox(btnHeute, btnWoche);
 
-        // Navigation
-        Button btnZurueck = new Button("← Zurück");
-        Button btnVor     = new Button("Weiter →");
-        Label  lblTitel   = new Label();
-        lblTitel.textProperty().bind(viewModel.getTitelProperty());
-        lblTitel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
+        navigationBox.setAlignment(Pos.CENTER);
 
-        btnZurueck.setOnAction(e -> viewModel.navigiereZurueck());
-        btnVor.setOnAction(e -> viewModel.navigiereVor());
-
-        HBox navigation = new HBox(12, btnZurueck, lblTitel, btnVor);
-        navigation.setAlignment(Pos.CENTER);
-        HBox.setHgrow(lblTitel, Priority.ALWAYS);
-        lblTitel.setMaxWidth(Double.MAX_VALUE);
-        lblTitel.setAlignment(Pos.CENTER);
-
-        VBox header = new VBox(12, titel, toggleBox, navigation);
+        VBox header = new VBox(12, titel, toggleBox, navigationBox);
         header.setPadding(new Insets(16, 16, 12, 16));
         header.setStyle(
                 "-fx-background-color: white;" +
@@ -97,6 +103,26 @@ public class SchuelerPortalView extends BorderPane {
                         "-fx-border-width: 0 0 1 0;"
         );
         return header;
+    }
+
+    // ---------------------------------------------------------------
+    // Navigation – einmal aufbauen, kein doppelter View-Aufruf
+    // ---------------------------------------------------------------
+
+    private void aktualisiereNavigation() {
+        navigationBox.getChildren().clear();
+
+        if (btnHeute.isSelected()) {
+            // Nur viewModel aufrufen – Observer aktualisiert die View
+            btnTagZurueck.setOnAction(e -> viewModel.navigiereZurueck());
+            btnTagVor.setOnAction(e -> viewModel.navigiereVor());
+            navigationBox.getChildren().addAll(btnTagZurueck, lblTitel, btnTagVor);
+        } else {
+            // Woche vor/zurück – nicht Tag für Tag
+            btnWocheZurueck.setOnAction(e -> viewModel.navigiereWocheZurueck());
+            btnWocheVor.setOnAction(e -> viewModel.navigiereWocheVor());
+            navigationBox.getChildren().addAll(btnWocheZurueck, lblTitel, btnWocheVor);
+        }
     }
 
     // ---------------------------------------------------------------
@@ -112,7 +138,7 @@ public class SchuelerPortalView extends BorderPane {
     }
 
     // ---------------------------------------------------------------
-    // Tagesansicht – Liste der Stunden mit Ampelfarben
+    // Tagesansicht
     // ---------------------------------------------------------------
 
     private void zeigeTagsansicht() {
@@ -127,13 +153,14 @@ public class SchuelerPortalView extends BorderPane {
             return;
         }
 
+        LocalDate datum = viewModel.getAktuellesDatum();
         for (Stunde s : stunden) {
-            inhalt.getChildren().add(buildStundenKarte(s));
+            inhalt.getChildren().add(buildStundenKarte(s, datum));
         }
     }
 
     // ---------------------------------------------------------------
-    // Wochenansicht – Grid Mo–Fr
+    // Wochenansicht
     // ---------------------------------------------------------------
 
     private void zeigeWochenansicht() {
@@ -143,7 +170,6 @@ public class SchuelerPortalView extends BorderPane {
         wochenGrid.setHgap(8);
         wochenGrid.setVgap(8);
 
-        // Kopfzeile
         String[] tage = {"MO", "DI", "MI", "DO", "FR"};
         Wochentag[] wochentage = {
                 Wochentag.MONTAG, Wochentag.DIENSTAG,
@@ -169,18 +195,23 @@ public class SchuelerPortalView extends BorderPane {
             wochenGrid.add(kopf, i, 0);
         }
 
-        // Stunden in Spalten verteilen
         var alleStunden = viewModel.getWochenStundenProperty().get();
         int[] zeilenzaehler = new int[5];
         java.util.Arrays.fill(zeilenzaehler, 1);
+
+        // Montag der aktuellen Woche für Datum-Berechnung
+        LocalDate montag = viewModel.getAktuellesDatum().with(DayOfWeek.MONDAY);
 
         if (alleStunden != null) {
             for (Stunde s : alleStunden) {
                 Wochentag tag = s.getZeitslot().getWochentag();
                 for (int i = 0; i < wochentage.length; i++) {
                     if (wochentage[i] == tag) {
+                        // Datum dieses Wochentags
+                        LocalDate tagDatum = montag.plusDays(i);
                         wochenGrid.add(
-                                buildStundenKarte(s), i, zeilenzaehler[i]++
+                                buildStundenKarte(s, tagDatum),
+                                i, zeilenzaehler[i]++
                         );
                         break;
                     }
@@ -192,10 +223,13 @@ public class SchuelerPortalView extends BorderPane {
     }
 
     // ---------------------------------------------------------------
-    // Stunden-Karte – Ampelsystem wie im Mockup
+    // Stunden-Karte – datum-abhängige Vertretungsanzeige
     // ---------------------------------------------------------------
 
-    private HBox buildStundenKarte(Stunde stunde) {
+    private HBox buildStundenKarte(Stunde stunde, LocalDate datum) {
+        // Vertretung nur wenn Datum übereinstimmt
+        boolean hatVertretung = viewModel.hatVertretungAmDatum(stunde, datum);
+
         String hintergrund;
         String textFarbe;
         String badge;
@@ -204,7 +238,7 @@ public class SchuelerPortalView extends BorderPane {
             hintergrund = "#c0392b";
             textFarbe   = "white";
             badge       = "✕ Ausfall";
-        } else if (stunde.isIstVertretung()) {
+        } else if (hatVertretung) {
             hintergrund = "#f39c12";
             textFarbe   = "white";
             badge       = "⚠ Vertretung";
@@ -214,27 +248,30 @@ public class SchuelerPortalView extends BorderPane {
             badge       = null;
         }
 
+        // Zeit
         String startzeit = stunde.getZeitslot().getStartzeit().toString();
         String endzeit   = stunde.getZeitslot().getEndzeit().toString();
         Label lblZeit = new Label(startzeit + " - " + endzeit);
         lblZeit.setStyle(
                 "-fx-min-width: 100;" +
-                        "-fx-text-fill: " + (stunde.isIstAusfall() || stunde.isIstVertretung()
+                        "-fx-text-fill: " + (stunde.isIstAusfall() || hatVertretung
                         ? "white" : "#666") + ";" +
                         "-fx-font-size: 12;"
         );
 
+        // Fach
         String fachName = stunde.getFach() != null
                 ? stunde.getFach().getBezeichnung() : "–";
 
-        // NEU: raumInfo VOR lblDetails deklarieren
+        // Raum
         String raumInfo = stunde.getRaum() != null
                 ? "| " + stunde.getRaum().getBezeichnung() : "";
 
+        // Lehrer – datum-abhängig
         String lehrerInfo;
-        if (stunde.isIstVertretung()) {
-            String vertretungsName = viewModel.getVertretungslehrerName(stunde);
-            lehrerInfo = vertretungsName + " (Vertretung)";
+        if (hatVertretung) {
+            lehrerInfo = viewModel.getVertretungslehrerName(stunde, datum)
+                    + " (Vertretung)";
         } else {
             lehrerInfo = stunde.getLehrkraft() != null
                     ? stunde.getLehrkraft().getName() +
@@ -249,11 +286,10 @@ public class SchuelerPortalView extends BorderPane {
                         "-fx-text-fill: " + textFarbe + ";"
         );
 
-        // NEU: nur einmal deklariert
         Label lblDetails = new Label(lehrerInfo + " " + raumInfo);
         lblDetails.setStyle(
                 "-fx-font-size: 11;" +
-                        "-fx-text-fill: " + (stunde.isIstAusfall() || stunde.isIstVertretung()
+                        "-fx-text-fill: " + (stunde.isIstAusfall() || hatVertretung
                         ? "rgba(255,255,255,0.85)" : "#666") + ";"
         );
 
@@ -281,10 +317,11 @@ public class SchuelerPortalView extends BorderPane {
                         "-fx-background-radius: 8;" +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 2);";
 
-        if (!stunde.isIstAusfall() && !stunde.isIstVertretung()) {
-            stil += "-fx-border-color: transparent transparent transparent #1a7f37;" +
-                    "-fx-border-width: 0 0 0 4;" +
-                    "-fx-border-radius: 0;";
+        if (!stunde.isIstAusfall() && !hatVertretung) {
+            stil +=
+                    "-fx-border-color: transparent transparent transparent #1a7f37;" +
+                            "-fx-border-width: 0 0 0 4;" +
+                            "-fx-border-radius: 0;";
         }
 
         karte.setStyle(stil);

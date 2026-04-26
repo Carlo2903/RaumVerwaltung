@@ -72,9 +72,17 @@ public class SchuelerPortalViewModel implements Observer {
         titelProperty.set(klassenName + " – " + datum);
     }
 
-    public String getVertretungslehrerName(Stunde stunde) {
+    public String getVertretungslehrerName(Stunde stunde, LocalDate datum) {
         return VertretungUtil.getVertretungslehrerName(
-                stunde, model.getVertretungenProStunde()
+                stunde, model.getVertretungenProStunde(), datum
         );
     }
+
+    public boolean hatVertretungAmDatum(Stunde stunde, LocalDate datum) {
+        return model.hatVertretungAmDatum(stunde, datum);
+    }
+
+    public void navigiereWocheVor()    { model.navigiereWochen(1); }
+    public void navigiereWocheZurueck() { model.navigiereWochen(-1); }
+
 }
