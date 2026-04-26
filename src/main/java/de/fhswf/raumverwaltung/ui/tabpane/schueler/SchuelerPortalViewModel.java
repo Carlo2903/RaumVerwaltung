@@ -1,12 +1,12 @@
 package de.fhswf.raumverwaltung.ui.tabpane.schueler;
 
-import de.fhswf.raumverwaltung.db.entities.Klasse;
-import de.fhswf.raumverwaltung.db.entities.Stunde;
+import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.ui.util.VertretungUtil;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import lombok.Getter;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Observable;
@@ -17,20 +17,18 @@ public class SchuelerPortalViewModel implements Observer {
     private final SchuelerPortalModel model;
 
     @Getter
-    private final ObjectProperty<ObservableList<Stunde>> tagesStundenProperty
-            = new SimpleObjectProperty<>(FXCollections.observableArrayList());
+    private final ObservableList<Stunde> tagesStundenProperty
+            = FXCollections.observableArrayList();
 
     @Getter
-    private final ObjectProperty<ObservableList<Stunde>> wochenStundenProperty
-            = new SimpleObjectProperty<>(FXCollections.observableArrayList());
+    private final ObservableList<Stunde> wochenStundenProperty
+            = FXCollections.observableArrayList();
 
-    // Anzeige-Titel z.B. "Klasse 7b – Montag, 17.03.2026"
     @Getter
-    private final StringProperty titelProperty = new SimpleStringProperty();
+    private final StringProperty tagesTitelProperty = new SimpleStringProperty();
 
-    private static final DateTimeFormatter FORMATTER =
-            DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy",
-                    java.util.Locale.GERMAN);
+    @Getter
+    private final StringProperty wochenTitelProperty = new SimpleStringProperty();
 
     public SchuelerPortalViewModel() {
         this.model = SchuelerPortalModel.getInstance();
@@ -39,37 +37,41 @@ public class SchuelerPortalViewModel implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        tagesStundenProperty.set(
-                FXCollections.observableList(model.getTagesStunden())
-        );
-        wochenStundenProperty.set(
-                FXCollections.observableList(model.getWochenStunden())
-        );
+        tagesStundenProperty.setAll(model.getTagesStunden());
+        wochenStundenProperty.setAll(model.getWochenStunden());
         aktualisiereTitle();
     }
 
-    public void laden()             { model.laden(); }
-    public void navigiereVor()      { model.navigiereTage(1); }
-    public void navigiereZurueck()  { model.navigiereTage(-1); }
-    public void navigiereHeute()    { model.navigiereHeute(); }
+    private void aktualisiereTitle() {
+        LocalDate datum    = model.getAktuellesDatum();
+        Klasse klasse      = model.getAktuelleKlasse();
+        String klassenName = klasse != null
+                ? "Klasse " + klasse.getBezeichnung() + " – " : "";
+
+        // Tages-Titel
+        String tag = datum.format(
+                DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy",
+                        java.util.Locale.GERMAN));
+        tag = tag.substring(0, 1).toUpperCase() + tag.substring(1);
+        tagesTitelProperty.set(klassenName + tag);
+
+        // Wochen-Titel
+        LocalDate montag  = datum.with(DayOfWeek.MONDAY);
+        LocalDate freitag = datum.with(DayOfWeek.FRIDAY);
+        wochenTitelProperty.set(klassenName +
+                montag.format(DateTimeFormatter.ofPattern("dd.MM")) +
+                " – " +
+                freitag.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+    }
+
+    public void laden()                { model.laden(); }
+    public void navigiereVor()         { model.navigiereTage(1); }
+    public void navigiereZurueck()     { model.navigiereTage(-1); }
+    public void navigiereWocheVor()    { model.navigiereWochen(1); }
+    public void navigiereWocheZurueck() { model.navigiereWochen(-1); }
 
     public LocalDate getAktuellesDatum() {
         return model.getAktuellesDatum();
-    }
-
-    public Klasse getAktuelleKlasse() {
-        return model.getAktuelleKlasse();
-    }
-
-    private void aktualisiereTitle() {
-        Klasse klasse = model.getAktuelleKlasse();
-        String klassenName = klasse != null ? "Klasse " + klasse.getBezeichnung() : "";
-        String datum = model.getAktuellesDatum().format(FORMATTER);
-
-        // Ersten Buchstaben groß
-        datum = datum.substring(0, 1).toUpperCase() + datum.substring(1);
-
-        titelProperty.set(klassenName + " – " + datum);
     }
 
     public String getVertretungslehrerName(Stunde stunde, LocalDate datum) {
@@ -81,8 +83,4 @@ public class SchuelerPortalViewModel implements Observer {
     public boolean hatVertretungAmDatum(Stunde stunde, LocalDate datum) {
         return model.hatVertretungAmDatum(stunde, datum);
     }
-
-    public void navigiereWocheVor()    { model.navigiereWochen(1); }
-    public void navigiereWocheZurueck() { model.navigiereWochen(-1); }
-
 }

@@ -3,13 +3,14 @@ package de.fhswf.raumverwaltung.ui.tabpane.schueler;
 import de.fhswf.raumverwaltung.db.dao.*;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.service.BenutzerService;
+import de.fhswf.raumverwaltung.ui.tabpane.vertretung.VertretungTableModel;
 import lombok.Getter;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 
-public class SchuelerPortalModel extends Observable {
+public class SchuelerPortalModel extends Observable implements Observer {
 
     private static SchuelerPortalModel instance;
 
@@ -30,23 +31,32 @@ public class SchuelerPortalModel extends Observable {
     @Getter
     private List<Stunde> wochenStunden = new ArrayList<>();
 
-    // NEU: Vertretungen für Anzeige
     @Getter
     private Map<Long, Vertretung> vertretungenProStunde = new HashMap<>();
 
-    // Gecachter Plan – nur einmal laden
-    private Stundenplan aktuellerPlan = null;
-
     private List<Stunde> alleStunden = new ArrayList<>();
+    private Stundenplan  aktuellerPlan = null;
 
-
-    private SchuelerPortalModel() {}
+    private SchuelerPortalModel() {
+        // Auf Vertretungsänderungen hören – automatische Aktualisierung
+        VertretungTableModel.getInstance().addObserver(this);
+    }
 
     public static SchuelerPortalModel getInstance() {
         if (instance == null) {
             instance = new SchuelerPortalModel();
         }
         return instance;
+    }
+
+    // Reagiert wenn VertretungTableModel sich ändert
+    @Override
+    public void update(Observable o, Object arg) {
+        if (o instanceof VertretungTableModel) {
+            ladeVertretungen();
+            ladeAktuellenTag();
+            ladeAktuelleWoche();
+        }
     }
 
     public void laden() {
@@ -65,7 +75,6 @@ public class SchuelerPortalModel extends Observable {
 
         aktuellerPlan = plaene.get(0);
 
-        // NEU: alle Stunden einmal laden
         stundeDao.clearCache();
         alleStunden = stundeDao.findeNachStundenplan(aktuellerPlan);
 
@@ -88,10 +97,16 @@ public class SchuelerPortalModel extends Observable {
         ladeAktuelleWoche();
     }
 
-    public void navigiereHeute() {
-        aktuellesDatum = LocalDate.now();
+    public void navigiereWochen(int wochen) {
+        aktuellesDatum = aktuellesDatum.plusWeeks(wochen);
         ladeAktuellenTag();
         ladeAktuelleWoche();
+    }
+
+    public boolean hatVertretungAmDatum(Stunde stunde, LocalDate datum) {
+        if (stunde == null || stunde.getId() == null) return false;
+        Vertretung v = vertretungenProStunde.get(stunde.getId());
+        return v != null && v.getDatum().equals(datum);
     }
 
     // ---------------------------------------------------------------
@@ -122,7 +137,6 @@ public class SchuelerPortalModel extends Observable {
             return;
         }
 
-        // NEU: aktuellesDatum als drittes Argument
         tagesStunden = filterStunden(aktuelleKlasse, wochentag, aktuellesDatum);
         setChanged();
         notifyObservers();
@@ -145,35 +159,14 @@ public class SchuelerPortalModel extends Observable {
             }
         }
     }
-    private List<Stunde> filterStunden(Klasse klasse, Wochentag wochentag, LocalDate datum) {
+
+    private List<Stunde> filterStunden(Klasse klasse, Wochentag wochentag,
+                                       LocalDate datum) {
         return alleStunden.stream()
                 .filter(s -> s.getKlasse() != null &&
                         s.getKlasse().getId().equals(klasse.getId()) &&
                         s.getZeitslot().getWochentag() == wochentag)
                 .sorted(Comparator.comparingInt(s -> s.getZeitslot().getStundenNummer()))
-                .toList();
-    }
-
-    // Vertretung nur wenn Datum in Abwesenheitszeitraum liegt
-    public boolean hatVertretungAmDatum(Stunde stunde, LocalDate datum) {
-        Vertretung v = vertretungenProStunde.get(stunde.getId());
-        if (v == null) return false;
-        return v.getDatum().equals(datum);
-    }
-
-
-    private List<Stunde> ladeStundenFuerKlasseUndTag(Klasse klasse,
-                                                     Wochentag wochentag) {
-        stundeDao.clearCache();
-
-        // NEU: stundeDao.findeNachStundenplan() statt getStunden()
-        return stundeDao.findeNachStundenplan(aktuellerPlan).stream()
-                .filter(s -> s.getKlasse() != null &&
-                        s.getKlasse().getId().equals(klasse.getId()) &&
-                        s.getZeitslot().getWochentag() == wochentag)
-                .sorted(Comparator.comparingInt(
-                        s -> s.getZeitslot().getStundenNummer()
-                ))
                 .toList();
     }
 
@@ -186,11 +179,5 @@ public class SchuelerPortalModel extends Observable {
             case FRIDAY    -> Wochentag.FREITAG;
             default        -> null;
         };
-    }
-
-     public void navigiereWochen(int wochen) {
-        aktuellesDatum = aktuellesDatum.plusWeeks(wochen);
-        ladeAktuellenTag();
-        ladeAktuelleWoche();
     }
 }

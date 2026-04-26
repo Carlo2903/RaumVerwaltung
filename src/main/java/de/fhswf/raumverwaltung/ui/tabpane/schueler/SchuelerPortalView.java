@@ -2,6 +2,7 @@ package de.fhswf.raumverwaltung.ui.tabpane.schueler;
 
 import de.fhswf.raumverwaltung.db.entities.Stunde;
 import de.fhswf.raumverwaltung.db.entities.Wochentag;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -37,7 +38,6 @@ public class SchuelerPortalView extends BorderPane {
         this.viewModel = viewModel;
 
         // Titel einmal binden
-        lblTitel.textProperty().bind(viewModel.getTitelProperty());
         lblTitel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
         lblTitel.setMaxWidth(Double.MAX_VALUE);
         lblTitel.setAlignment(Pos.CENTER);
@@ -47,13 +47,18 @@ public class SchuelerPortalView extends BorderPane {
         this.setTop(buildHeader());
         this.setCenter(buildInhalt());
 
-        // Observer – View nur einmal aktualisieren
         viewModel.getTagesStundenProperty().addListener(
-                (obs, o, n) -> { if (btnHeute.isSelected()) zeigeTagsansicht(); }
+                (ListChangeListener<Stunde>) c -> {
+                    if (btnHeute.isSelected()) zeigeTagsansicht();
+                }
         );
         viewModel.getWochenStundenProperty().addListener(
-                (obs, o, n) -> { if (btnWoche.isSelected()) zeigeWochenansicht(); }
+                (ListChangeListener<Stunde>) c -> {
+                    if (btnWoche.isSelected()) zeigeWochenansicht();
+                }
         );
+
+
 
         viewModel.laden();
         btnHeute.setSelected(true);
@@ -90,6 +95,34 @@ public class SchuelerPortalView extends BorderPane {
             if (n == btnHeute)      zeigeTagsansicht();
             else if (n == btnWoche) zeigeWochenansicht();
         });
+
+        gruppe.selectedToggleProperty().addListener((obs, o, n) -> {
+            aktualisiereNavigation();
+            if (n == btnHeute) {
+                // Tages-Titel binden
+                lblTitel.textProperty().bind(viewModel.getTagesTitelProperty());
+                zeigeTagsansicht();
+            } else if (n == btnWoche) {
+                // Wochen-Titel binden
+                lblTitel.textProperty().bind(viewModel.getWochenTitelProperty());
+                zeigeWochenansicht();
+            }
+        });
+
+// Initial – Tages-Titel binden
+        lblTitel.textProperty().bind(viewModel.getTagesTitelProperty());
+
+// ListChangeListener statt ObjectProperty-Listener:
+        viewModel.getTagesStundenProperty().addListener(
+                (ListChangeListener<Stunde>) c -> {
+                    if (btnHeute.isSelected()) zeigeTagsansicht();
+                }
+        );
+        viewModel.getWochenStundenProperty().addListener(
+                (ListChangeListener<Stunde>) c -> {
+                    if (btnWoche.isSelected()) zeigeWochenansicht();
+                }
+        );
 
         HBox toggleBox = new HBox(btnHeute, btnWoche);
 
@@ -144,12 +177,11 @@ public class SchuelerPortalView extends BorderPane {
     private void zeigeTagsansicht() {
         inhalt.getChildren().clear();
 
-        var stunden = viewModel.getTagesStundenProperty().get();
+        // Direkt aus ObservableList lesen
+        var stunden = viewModel.getTagesStundenProperty();
 
-        if (stunden == null || stunden.isEmpty()) {
-            inhalt.getChildren().add(
-                    new Label("Keine Stunden für diesen Tag.")
-            );
+        if (stunden.isEmpty()) {
+            inhalt.getChildren().add(new Label("Keine Stunden für diesen Tag."));
             return;
         }
 
@@ -195,26 +227,23 @@ public class SchuelerPortalView extends BorderPane {
             wochenGrid.add(kopf, i, 0);
         }
 
-        var alleStunden = viewModel.getWochenStundenProperty().get();
+        // Direkt aus ObservableList lesen
+        var alleStunden = viewModel.getWochenStundenProperty();
         int[] zeilenzaehler = new int[5];
         java.util.Arrays.fill(zeilenzaehler, 1);
 
-        // Montag der aktuellen Woche für Datum-Berechnung
         LocalDate montag = viewModel.getAktuellesDatum().with(DayOfWeek.MONDAY);
 
-        if (alleStunden != null) {
-            for (Stunde s : alleStunden) {
-                Wochentag tag = s.getZeitslot().getWochentag();
-                for (int i = 0; i < wochentage.length; i++) {
-                    if (wochentage[i] == tag) {
-                        // Datum dieses Wochentags
-                        LocalDate tagDatum = montag.plusDays(i);
-                        wochenGrid.add(
-                                buildStundenKarte(s, tagDatum),
-                                i, zeilenzaehler[i]++
-                        );
-                        break;
-                    }
+        for (Stunde s : alleStunden) {
+            Wochentag tag = s.getZeitslot().getWochentag();
+            for (int i = 0; i < wochentage.length; i++) {
+                if (wochentage[i] == tag) {
+                    LocalDate tagDatum = montag.plusDays(i);
+                    wochenGrid.add(
+                            buildStundenKarte(s, tagDatum),
+                            i, zeilenzaehler[i]++
+                    );
+                    break;
                 }
             }
         }
