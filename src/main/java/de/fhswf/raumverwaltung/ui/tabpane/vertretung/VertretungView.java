@@ -29,7 +29,6 @@ public class VertretungView extends VBox {
     private final FlowPane                 kandidatenPane = new FlowPane();
 
 
-    // NEU: ViewModel wird übergeben
     public VertretungView(VertretungViewModel viewModel) {
         this.viewModel = viewModel;
 
@@ -43,14 +42,18 @@ public class VertretungView extends VBox {
                 buildSektion3()
         );
 
-        viewModel.getLehrkraefteProperty().addListener(
-                (obs, o, n) -> { if (n != null) lehrkraftBox.setItems(n); }
+        // ListChangeListener statt ObjectProperty-Listener
+        viewModel.getLehrkraefte().addListener(
+                (ListChangeListener<Lehrkraft>) c ->
+                        lehrkraftBox.setItems(viewModel.getLehrkraefte())
         );
-        viewModel.getBetroffeneStundenProperty().addListener(
-                (obs, o, n) -> { if (n != null) stundenTable.setItems(n); }
+        viewModel.getBetroffeneStunden().addListener(
+                (ListChangeListener<Stunde>) c ->
+                        stundenTable.setItems(viewModel.getBetroffeneStunden())
         );
-        viewModel.getVerfuegbareLehrerProperty().addListener(
-                (obs, o, n) -> aktualisiereKandidaten(n)
+        viewModel.getVerfuegbareLehrer().addListener(
+                (ListChangeListener<Lehrkraft>) c ->
+                        aktualisiereKandidaten(viewModel.getVerfuegbareLehrer())
         );
 
         viewModel.laden();

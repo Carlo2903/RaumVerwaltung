@@ -2,15 +2,14 @@ package de.fhswf.raumverwaltung.ui.tabpane.vertretung;
 
 import de.fhswf.raumverwaltung.db.dao.AbwesenheitDao;
 import de.fhswf.raumverwaltung.db.dao.LehrkraftDao;
+import de.fhswf.raumverwaltung.db.dao.VertretungDao;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
 import de.fhswf.raumverwaltung.service.VertretungsService;
 import lombok.Getter;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Observable;
+import java.util.*;
 
 public class VertretungTableModel extends Observable {
 
@@ -40,6 +39,11 @@ public class VertretungTableModel extends Observable {
     @Getter
     private List<Lehrkraft> verfuegbareLehrer = new ArrayList<>();
 
+    @Getter
+    private Map<Long, Vertretung> vertretungenProStunde = new HashMap<>();
+
+    private final VertretungDao vertretungDao = new VertretungDao();
+
     private VertretungTableModel() {}
 
     public static VertretungTableModel getInstance() {
@@ -68,6 +72,7 @@ public class VertretungTableModel extends Observable {
         );
         ausgewaehlteStunde  = null;
         verfuegbareLehrer   = new ArrayList<>();
+        ladeVertretungen();
         setChanged();
         notifyObservers();
     }
@@ -103,6 +108,17 @@ public class VertretungTableModel extends Observable {
         ausgewaehlteStunde = null;
         verfuegbareLehrer  = new ArrayList<>();
         setChanged();
+        ladeVertretungen();
         notifyObservers();
     }
+    private void ladeVertretungen() {
+        vertretungenProStunde = new HashMap<>();
+        if (aktuelleAbwesenheit == null) return;
+
+        vertretungDao.findeNachDatum(aktuelleAbwesenheit.getVon())
+                .forEach(v -> vertretungenProStunde.put(v.getStunde().getId(), v));
+    }
+
+
+
 }
