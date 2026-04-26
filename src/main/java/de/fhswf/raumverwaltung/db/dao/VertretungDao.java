@@ -18,9 +18,11 @@ public class VertretungDao extends GenericDao<Vertretung> {
 
     // Lehrkräfte die im Zeitslot NICHT belegt und NICHT abwesend sind
     public List<Lehrkraft> findeVerfuegbareLehrer(Zeitslot zeitslot, LocalDate datum) {
+        clearCache();
         return entityManager
                 .createQuery(
-                        "SELECT l FROM Lehrkraft l " +
+                        "SELECT DISTINCT l FROM Lehrkraft l " +
+                                "LEFT JOIN FETCH l.faecher " +
                                 "WHERE l NOT IN (" +
                                 "  SELECT s.lehrkraft FROM Stunde s WHERE s.zeitslot = :slot" +
                                 ") " +
