@@ -3,11 +3,13 @@ package de.fhswf.raumverwaltung.ui.tabpane.raum;
 import de.fhswf.raumverwaltung.db.entities.Raum;
 import de.fhswf.raumverwaltung.db.entities.RaumTyp;
 import javafx.beans.property.*;
+import lombok.Getter;
 
 public class RaumTableEntity {
     private final StringProperty bezeichnung;
     private final ObjectProperty<RaumTyp> raumtyp;
     private final IntegerProperty kapazitaet;
+    @Getter
     private final Raum raum;
 
     public RaumTableEntity(Raum raum) {
@@ -20,5 +22,4 @@ public class RaumTableEntity {
     public StringProperty bezeichnungProperty() { return bezeichnung; }
     public ObjectProperty<RaumTyp> raumtypProperty() { return raumtyp; }
     public IntegerProperty kapazitaetProperty() { return kapazitaet; }
-    public Raum getRaum() { return raum; }
 }

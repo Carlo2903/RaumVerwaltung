@@ -2,6 +2,7 @@ package de.fhswf.raumverwaltung.db.dao;
 
 import de.fhswf.raumverwaltung.db.entities.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class VertretungDao extends GenericDao<Vertretung> {
@@ -30,6 +31,17 @@ public class VertretungDao extends GenericDao<Vertretung> {
                         Lehrkraft.class)
                 .setParameter("slot", zeitslot)
                 .setParameter("datum", datum)
+                .getResultList();
+    }
+
+    public List<Vertretung> findeNachStunden(List<Stunde> stunden) {
+        if (stunden.isEmpty()) return new ArrayList<>();
+        clearCache();
+        return entityManager
+                .createQuery(
+                        "SELECT v FROM Vertretung v WHERE v.stunde IN :stunden",
+                        Vertretung.class)
+                .setParameter("stunden", stunden)
                 .getResultList();
     }
 }

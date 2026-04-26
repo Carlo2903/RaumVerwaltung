@@ -24,6 +24,7 @@ public class RaumTableViewModel implements Observer {
     private final StringProperty fehlerProperty = new SimpleStringProperty();
 
     // Aktuell bearbeiteter Datensatz – liegt im ViewModel, nicht in der View
+    @Getter
     private Raum aktuellerDatensatz = null;
 
     public RaumTableViewModel() {
@@ -108,7 +109,4 @@ public class RaumTableViewModel implements Observer {
         this.aktuellerDatensatz = null;
     }
 
-    public Raum getAktuellerDatensatz() {
-        return aktuellerDatensatz;
-    }
 }
