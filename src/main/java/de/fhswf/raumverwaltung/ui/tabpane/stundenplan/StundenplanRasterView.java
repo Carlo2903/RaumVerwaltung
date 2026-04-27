@@ -12,7 +12,8 @@ import java.util.Map;
 
 public class StundenplanRasterView extends BorderPane {
 
-    private final StundenplanViewModel viewModel;
+    private final StundenplanViewModelInterface viewModel;
+    private final boolean                       readOnly;
 
     private static final Wochentag[] TAGE = {
             Wochentag.MONTAG, Wochentag.DIENSTAG, Wochentag.MITTWOCH,
@@ -23,19 +24,19 @@ public class StundenplanRasterView extends BorderPane {
 
     private final GridPane grid = new GridPane();
 
-    public StundenplanRasterView(StundenplanViewModel viewModel) {
+    public StundenplanRasterView(StundenplanViewModelInterface viewModel,
+                                 boolean readOnly) {
         this.viewModel = viewModel;
+        this.readOnly  = readOnly;
 
         this.setTop(buildHeader());
         this.setCenter(buildGrid());
 
-        // ListChangeListener – zuverlässiger als ObjectProperty
         viewModel.getStundenListe().addListener(
                 (ListChangeListener<Stunde>) change ->
                         aktualisiereGrid(viewModel.getGridProperty().get())
         );
 
-        // Null-Check falls kein Plan existiert
         viewModel.getGridProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) aktualisiereGrid(newVal);
         });
@@ -48,33 +49,7 @@ public class StundenplanRasterView extends BorderPane {
     // ---------------------------------------------------------------
 
     private HBox buildHeader() {
-        Label titel = new Label("Stundenplan");
-        titel.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
-
-        Label lblKlasse = new Label("Klasse:");
-
-        ComboBox<Klasse> klasseBox = new ComboBox<>();
-        klasseBox.setPromptText("Alle Klassen");
-        klasseBox.setConverter(EntityStringConverter.forKlasse());
-
-        viewModel.getKlassenProperty().addListener(
-                (obs, oldVal, newVal) -> {
-                    if (newVal != null) klasseBox.setItems(newVal);
-                }
-        );
-
-        klasseBox.setOnAction(e ->
-                viewModel.filterNachKlasse(klasseBox.getValue())
-        );
-
-        Button btnAlle = new Button("Alle");
-        btnAlle.setOnAction(e -> {
-            klasseBox.setValue(null);
-            viewModel.filterNachKlasse(null);
-        });
-
-        HBox header = new HBox(16, titel, new Separator(),
-                lblKlasse, klasseBox, btnAlle);
+        HBox header = new HBox(16);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(12, 16, 12, 16));
         header.setStyle(
@@ -82,6 +57,44 @@ public class StundenplanRasterView extends BorderPane {
                         "-fx-border-color: #e0e0e0;" +
                         "-fx-border-width: 0 0 1 0;"
         );
+
+        if (readOnly) {
+            // Lehrer: nur Titel, kein Filter
+            Label titel = new Label("Mein Stundenplan");
+            titel.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+            header.getChildren().add(titel);
+
+        } else {
+            // Admin: Klassen-Filter
+            Label titel = new Label("Stundenplan");
+            titel.setStyle("-fx-font-size: 18; -fx-font-weight: bold;");
+
+            Label lblKlasse = new Label("Klasse:");
+
+            ComboBox<Klasse> klasseBox = new ComboBox<>();
+            klasseBox.setPromptText("Klasse wählen...");
+            klasseBox.setConverter(EntityStringConverter.forKlasse());
+
+            viewModel.getKlassenProperty().addListener(
+                    (obs, oldVal, newVal) -> {
+                        if (newVal != null) {
+                            javafx.application.Platform.runLater(() -> {
+                                klasseBox.getSelectionModel().clearSelection();
+                                klasseBox.setItems(newVal);
+                            });
+                        }
+                    }
+            );
+
+            klasseBox.setOnAction(e ->
+                    viewModel.filterNachKlasse(
+                            klasseBox.getSelectionModel().getSelectedItem()
+                    )
+            );
+
+            header.getChildren().addAll(titel, new Separator(), lblKlasse, klasseBox);
+        }
+
         return header;
     }
 
@@ -95,19 +108,20 @@ public class StundenplanRasterView extends BorderPane {
         grid.setPadding(new Insets(12));
         grid.setStyle("-fx-background-color: #f5f5f5;");
 
-        // Spalte 0 = Zeitslot-Label (schmal)
         ColumnConstraints colZeit = new ColumnConstraints();
         colZeit.setPrefWidth(60);
+        colZeit.setMinWidth(40);
         grid.getColumnConstraints().add(colZeit);
 
         for (int i = 0; i < TAGE.length; i++) {
             ColumnConstraints col = new ColumnConstraints();
             col.setHgrow(Priority.ALWAYS);
-            col.setMinWidth(120);
+            col.setMinWidth(80);
+            col.setFillWidth(true);
             grid.getColumnConstraints().add(col);
         }
 
-        // Kopfzeile: Wochentage
+        // Kopfzeile
         grid.add(new Label(""), 0, 0);
         for (int i = 0; i < TAGE.length; i++) {
             Label tagLabel = new Label(TAGE[i].name().substring(0, 2));
@@ -124,7 +138,7 @@ public class StundenplanRasterView extends BorderPane {
             grid.add(tagLabel, i + 1, 0);
         }
 
-        // Zeilen: Stundennummern
+        // Zeilen
         for (int stunde = 1; stunde <= STUNDEN_PRO_TAG; stunde++) {
             Label stdLabel = new Label(stunde + ".");
             stdLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 12;");
@@ -143,7 +157,7 @@ public class StundenplanRasterView extends BorderPane {
     }
 
     // ---------------------------------------------------------------
-    // Grid aktualisieren wenn Model sich ändert
+    // Grid aktualisieren
     // ---------------------------------------------------------------
 
     private void aktualisiereGrid(Map<Wochentag, Map<Integer, Stunde>> stundenGrid) {
@@ -177,49 +191,57 @@ public class StundenplanRasterView extends BorderPane {
     }
 
     // ---------------------------------------------------------------
-    // Zellen
+    // Leere Zelle
     // ---------------------------------------------------------------
 
     private Pane leereZelle(Wochentag tag, int stundeNummer) {
         VBox zelle = new VBox();
         zelle.setMinHeight(80);
         zelle.setMaxWidth(Double.MAX_VALUE);
-        zelle.setStyle(
+
+        String normalStyle =
                 "-fx-background-color: white;" +
                         "-fx-background-radius: 6;" +
                         "-fx-border-color: #e0e0e0;" +
-                        "-fx-border-radius: 6;" +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-border-radius: 6;";
 
-        zelle.setOnMouseEntered(e -> zelle.setStyle(
-                "-fx-background-color: #f0f4f8;" +
-                        "-fx-background-radius: 6;" +
-                        "-fx-border-color: #3d5a80;" +
-                        "-fx-border-radius: 6;" +
-                        "-fx-cursor: hand;"
-        ));
-        zelle.setOnMouseExited(e -> zelle.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 6;" +
-                        "-fx-border-color: #e0e0e0;" +
-                        "-fx-border-radius: 6;" +
-                        "-fx-cursor: hand;"
-        ));
-
-        zelle.setOnMouseClicked(e -> {
-            if (viewModel.getAktuellerPlan() == null) {
-                new Alert(Alert.AlertType.WARNING,
-                        "Kein aktiver Stundenplan gefunden. " +
-                                "Bitte zuerst ein Schuljahr anlegen.")
-                        .showAndWait();
-                return;
-            }
-            StundeBearbeitenDialog.zeige(viewModel, null, tag, stundeNummer);
-        });
+        if (readOnly) {
+            // Lehrer/Schüler: keine Interaktion
+            zelle.setStyle(normalStyle);
+        } else {
+            // Admin: klickbar
+            zelle.setStyle(normalStyle + "-fx-cursor: hand;");
+            zelle.setOnMouseEntered(e -> zelle.setStyle(
+                    "-fx-background-color: #f0f4f8;" +
+                            "-fx-background-radius: 6;" +
+                            "-fx-border-color: #3d5a80;" +
+                            "-fx-border-radius: 6;" +
+                            "-fx-cursor: hand;"
+            ));
+            zelle.setOnMouseExited(e ->
+                    zelle.setStyle(normalStyle + "-fx-cursor: hand;")
+            );
+            zelle.setOnMouseClicked(e -> {
+                if (viewModel.getAktuellerPlan() == null) {
+                    new Alert(Alert.AlertType.WARNING,
+                            "Kein aktiver Stundenplan gefunden. " +
+                                    "Bitte zuerst ein Schuljahr anlegen.")
+                            .showAndWait();
+                    return;
+                }
+                // Nur Admin hat StundenplanViewModel mit zeige()
+                if (viewModel instanceof StundenplanViewModel svm) {
+                    StundeBearbeitenDialog.zeige(svm, null, tag, stundeNummer);
+                }
+            });
+        }
 
         return zelle;
     }
+
+    // ---------------------------------------------------------------
+    // Belegte Zelle
+    // ---------------------------------------------------------------
 
     private Pane belegteZelle(Stunde stunde) {
         String farbe = stunde.isIstAusfall()    ? "#ffcccc" :
@@ -227,7 +249,6 @@ public class StundenplanRasterView extends BorderPane {
         String rand  = stunde.isIstAusfall()    ? "#cf222e" :
                 stunde.isIstVertretung() ? "#bf8700" : "#1a7f37";
 
-        // Lehrer: bei Vertretung den Vertretungslehrer anzeigen
         String lehrerText;
         if (stunde.isIstVertretung()) {
             lehrerText = viewModel.getVertretungslehrerName(stunde) + " (V)";
@@ -236,18 +257,17 @@ public class StundenplanRasterView extends BorderPane {
                     ? stunde.getLehrkraft().getKuerzel() : "?";
         }
 
-        Label lblFach   = new Label(stunde.getFach() != null
+        Label lblFach = new Label(stunde.getFach() != null
                 ? stunde.getFach().getKuerzel() : "?");
         lblFach.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
 
         Label lblLehrer = new Label(lehrerText);
         lblLehrer.setStyle("-fx-font-size: 11; -fx-text-fill: #555;");
 
-        Label lblRaum   = new Label(stunde.getRaum() != null
+        Label lblRaum = new Label(stunde.getRaum() != null
                 ? stunde.getRaum().getBezeichnung() : "?");
         lblRaum.setStyle("-fx-font-size: 11; -fx-text-fill: #555;");
 
-        // Alles in VBox – keine Überlappung
         VBox inhalt = new VBox(2, lblFach, lblLehrer, lblRaum);
         inhalt.setPadding(new Insets(6));
         inhalt.setMaxWidth(Double.MAX_VALUE);
@@ -263,19 +283,19 @@ public class StundenplanRasterView extends BorderPane {
             inhalt.getChildren().add(badge);
         }
 
-        // StackPane nur für Zähler oben rechts
         StackPane zelle = new StackPane(inhalt);
         zelle.setMinHeight(80);
         zelle.setMaxWidth(Double.MAX_VALUE);
-        zelle.setStyle(
+
+        String basisStyle =
                 "-fx-background-color: " + farbe + ";" +
                         "-fx-background-radius: 6;" +
                         "-fx-border-color: " + rand + ";" +
-                        "-fx-border-radius: 6;" +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-border-radius: 6;";
 
-        // Zähler oben rechts – nur im StackPane
+        zelle.setStyle(basisStyle + (readOnly ? "" : " -fx-cursor: hand;"));
+
+        // Zähler oben rechts
         if (stunde.getFach() != null && stunde.getKlasse() != null) {
             int aktuell = viewModel.getStundenZaehler(
                     stunde.getKlasse(), stunde.getFach()
@@ -300,29 +320,30 @@ public class StundenplanRasterView extends BorderPane {
             zelle.getChildren().add(lblZaehler);
         }
 
-        // Hover
-        zelle.setOnMouseEntered(e -> zelle.setStyle(
-                "-fx-background-color: derive(" + farbe + ", -10%);" +
-                        "-fx-background-radius: 6;" +
-                        "-fx-border-color: derive(" + rand + ", -20%);" +
-                        "-fx-border-radius: 6;" +
-                        "-fx-cursor: hand;"
-        ));
-        zelle.setOnMouseExited(e -> zelle.setStyle(
-                "-fx-background-color: " + farbe + ";" +
-                        "-fx-background-radius: 6;" +
-                        "-fx-border-color: " + rand + ";" +
-                        "-fx-border-radius: 6;" +
-                        "-fx-cursor: hand;"
-        ));
-
-        zelle.setOnMouseClicked(e ->
-                StundeBearbeitenDialog.zeige(
-                        viewModel, stunde,
-                        stunde.getZeitslot().getWochentag(),
-                        stunde.getZeitslot().getStundenNummer()
-                )
-        );
+        if (readOnly) {
+            // Kein Hover, kein Klick – read-only
+        } else {
+            // Admin: Hover + Klick zum Bearbeiten
+            zelle.setOnMouseEntered(e -> zelle.setStyle(
+                    "-fx-background-color: derive(" + farbe + ", -10%);" +
+                            "-fx-background-radius: 6;" +
+                            "-fx-border-color: derive(" + rand + ", -20%);" +
+                            "-fx-border-radius: 6;" +
+                            "-fx-cursor: hand;"
+            ));
+            zelle.setOnMouseExited(e ->
+                    zelle.setStyle(basisStyle + " -fx-cursor: hand;")
+            );
+            zelle.setOnMouseClicked(e -> {
+                if (viewModel instanceof StundenplanViewModel svm) {
+                    StundeBearbeitenDialog.zeige(
+                            svm, stunde,
+                            stunde.getZeitslot().getWochentag(),
+                            stunde.getZeitslot().getStundenNummer()
+                    );
+                }
+            });
+        }
 
         return zelle;
     }

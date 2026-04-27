@@ -9,8 +9,8 @@ public class StundenplanTab extends MyTab implements Reloadable {
 
     public StundenplanTab() {
         super("Stundenplan");
-        this.viewModel = new StundenplanViewModel(); // NEU
-        this.setContent(new StundenplanRasterView(viewModel));
+        this.viewModel = new StundenplanViewModel();
+        this.setContent(new StundenplanRasterView(viewModel, false));
     }
 
     @Override

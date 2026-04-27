@@ -11,7 +11,7 @@ import lombok.Getter;
 import java.time.LocalDate;
 import java.util.*;
 
-public class StundenplanViewModel implements Observer {
+public class StundenplanViewModel implements Observer, StundenplanViewModelInterface {
 
     private final StundenplanTableModel model;
 
@@ -36,12 +36,18 @@ public class StundenplanViewModel implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        // gridProperty bleibt für das Grid
         gridProperty.set(model.getStundenGrid());
-        klassenProperty.set(
-                FXCollections.observableList(model.getAlleKlassen())
-        );
-        // setAll() feuert immer
+
+        // NEU: nur setzen wenn sich Klassen wirklich geändert haben
+        List<Klasse> neueKlassen = model.getAlleKlassen();
+        if (klassenProperty.get() == null ||
+                !klassenProperty.get().containsAll(neueKlassen) ||
+                !neueKlassen.containsAll(klassenProperty.get())) {
+            klassenProperty.set(
+                    FXCollections.observableList(neueKlassen)
+            );
+        }
+
         stundenListe.setAll(
                 model.getStundenGrid().values().stream()
                         .flatMap(m -> m.values().stream())

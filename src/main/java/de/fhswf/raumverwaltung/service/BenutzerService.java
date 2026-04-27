@@ -1,6 +1,7 @@
 package de.fhswf.raumverwaltung.service;
 
 import de.fhswf.raumverwaltung.db.dao.BenutzerDao;
+import de.fhswf.raumverwaltung.db.dao.KlasseDao;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
 import lombok.Getter;
@@ -76,6 +77,25 @@ public class BenutzerService {
         System.out.println("Admin angelegt: admin / admin123");
     }
 
+    public boolean istAktuellerBenutzerKlassenlehrer() {
+        if (!(aktuellerBenutzer instanceof LehrerBenutzer lb)) return false;
+        return new KlasseDao().findAll().stream()
+                .anyMatch(k -> k.getKlassenLehrer() != null &&
+                        k.getKlassenLehrer().getId()
+                                .equals(lb.getLehrkraft().getId()));
+    }
+
+    // Klasse des aktuellen Klassenlehrers
+    public Klasse getKlasseDesKlassenlehrers() {
+        if (!(aktuellerBenutzer instanceof LehrerBenutzer lb)) return null;
+        return new KlasseDao().findAll().stream()
+                .filter(k -> k.getKlassenLehrer() != null &&
+                        k.getKlassenLehrer().getId()
+                                .equals(lb.getLehrkraft().getId()))
+                .findFirst()
+                .orElse(null);
+    }
+
     public void erstelleBenutzerFallsNichtVorhanden(
             List<Lehrkraft> lehrkraefte, List<Klasse> klassen) throws PlanungException {
 
@@ -99,6 +119,8 @@ public class BenutzerService {
                 ));
             }
         });
+
+
 
     }
 }
