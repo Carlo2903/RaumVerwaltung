@@ -352,7 +352,12 @@ public class SchuelerPortalView extends BorderPane {
                             "-fx-border-width: 0 0 0 4;" +
                             "-fx-border-radius: 0;";
         }
-
+        karte.setOnMouseClicked(e -> StundenDetailDialog.zeige(
+                stunde,
+                datum,
+                hatVertretung,
+                viewModel.getVertretungslehrerName(stunde, datum)
+        ));
         karte.setStyle(stil);
         return karte;
     }
