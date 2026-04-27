@@ -78,10 +78,15 @@ public class VertretungTableModel extends Observable {
     }
 
     // Schritt 2: Stunde auswählen → Kandidaten laden
-    public void stundeAuswaehlen(Stunde stunde, LocalDate datum) {
+    public void stundeAuswaehlen(Stunde stunde, LocalDate abwesenheitVon) {
         ausgewaehlteStunde = stunde;
-        verfuegbareLehrer  = vertretungsService.findeVertretungskandidaten(
-                stunde.getZeitslot(), datum
+
+        LocalDate korrekteDatum = vertretungsService.berechneStundenDatum(
+                stunde, abwesenheitVon
+        );
+
+        verfuegbareLehrer = vertretungsService.findeVertretungskandidaten(
+                stunde.getZeitslot(), korrekteDatum
         );
         setChanged();
         notifyObservers();
@@ -89,19 +94,22 @@ public class VertretungTableModel extends Observable {
 
     // Schritt 3: Vertretung zuweisen
     public void vertretungZuweisen(Lehrkraft vertretungsLehrer,
-                                   LocalDate datum) throws PlanungException {
+                                   LocalDate abwesenheitVon) throws PlanungException {
         if (ausgewaehlteStunde == null) return;
 
         // Service kümmert sich um alles – inklusive istVertretung setzen
+        LocalDate korrekteDatum = vertretungsService.berechneStundenDatum(
+                ausgewaehlteStunde, abwesenheitVon
+        );
+
         vertretungsService.weiseVertretungZu(
                 ausgewaehlteStunde, vertretungsLehrer,
-                datum, aktuelleAbwesenheit.getGrund(),
+                korrekteDatum,
+                aktuelleAbwesenheit.getGrund(),
                 aktuelleAbwesenheit.getBemerkung()
         );
 
-        betroffeneStunden = vertretungsService.findeBetroffeneStunden(
-                aktuelleAbwesenheit
-        );
+        betroffeneStunden = vertretungsService.findeBetroffeneStunden(aktuelleAbwesenheit);
         ladeVertretungen();
         ausgewaehlteStunde = null;
         verfuegbareLehrer  = new ArrayList<>();

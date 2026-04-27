@@ -4,6 +4,7 @@ import de.fhswf.raumverwaltung.db.dao.*;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,5 +124,18 @@ public class VertretungsService {
 
         // distinct() – falls Abwesenheit mehrere Wochen geht
         return tage.stream().distinct().collect(Collectors.toList());
+    }
+
+    public LocalDate berechneStundenDatum(Stunde stunde, LocalDate abwesenheitVon) {
+        Wochentag wochentag = stunde.getZeitslot().getWochentag();
+        LocalDate montag = abwesenheitVon.with(DayOfWeek.MONDAY);
+
+        return switch (wochentag) {
+            case MONTAG     -> montag;
+            case DIENSTAG   -> montag.plusDays(1);
+            case MITTWOCH   -> montag.plusDays(2);
+            case DONNERSTAG -> montag.plusDays(3);
+            case FREITAG    -> montag.plusDays(4);
+        };
     }
 }
