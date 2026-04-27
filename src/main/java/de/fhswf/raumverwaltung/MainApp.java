@@ -27,10 +27,12 @@ public class MainApp extends Application {
         erstelleStandardSchuljahr();
         erstelleZeitslots();
         erstelleBenutzer();
-
-
-
         Scene scene = new Scene(mainFrame, 1200, 800);
+
+        stage.setMinWidth(900);
+        stage.setMinHeight(600);
+
+
         stage.setTitle("Schul-Planer Pro 2026");
         stage.setScene(scene);
         stage.show();

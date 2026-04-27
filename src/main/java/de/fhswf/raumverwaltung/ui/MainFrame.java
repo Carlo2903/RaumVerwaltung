@@ -9,11 +9,19 @@ public class MainFrame extends StackPane {
     private final LoginView loginView = new LoginView();
 
     public MainFrame() {
+        MyTabPane tabPane = MyTabPane.getInstance();
         // TabPane liegt unten, LoginView als Overlay drüber
-        this.getChildren().addAll(MyTabPane.getInstance(), loginView);
+
+        // NEU: TabPane füllt den kompletten verfügbaren Platz
+        StackPane.setAlignment(tabPane, javafx.geometry.Pos.TOP_LEFT);
+        tabPane.setMaxWidth(Double.MAX_VALUE);
+        tabPane.setMaxHeight(Double.MAX_VALUE);
+
+        this.getChildren().addAll(tabPane, loginView);
+        this.setMaxWidth(Double.MAX_VALUE);
+        this.setMaxHeight(Double.MAX_VALUE);
     }
 
-    // Wird nach erfolgreichem Login aufgerufen
     public void hideLogin() {
         this.getChildren().remove(loginView);
     }
