@@ -9,6 +9,7 @@ import de.fhswf.raumverwaltung.ui.tabpane.lehrer.LehrerStundenplanTab;
 import de.fhswf.raumverwaltung.ui.tabpane.lehrkraft.LehrkraftTab;
 import de.fhswf.raumverwaltung.ui.tabpane.raum.RaumTab;
 import de.fhswf.raumverwaltung.ui.tabpane.schueler.SchuelerPortalTab;
+import de.fhswf.raumverwaltung.ui.tabpane.schuelerverwaltung.SchuelerVerwaltungTab;
 import de.fhswf.raumverwaltung.ui.tabpane.stundenplan.StundenplanTab;
 import de.fhswf.raumverwaltung.ui.tabpane.vertretung.VertretungTab;
 import javafx.scene.control.TabPane;
@@ -26,6 +27,7 @@ public class MyTabPane extends TabPane {
     private final VertretungTab    vertretungTab    = new VertretungTab();
     private final SchuelerPortalTab schuelerTab     = new SchuelerPortalTab();
     private LehrerKlassenplanTab lehrerKlassenplanTab;
+    private final SchuelerVerwaltungTab schuelerVerwaltungTab = new SchuelerVerwaltungTab();
 
     // NEU: Lehrer-Tab erst nach Login erstellen – nicht hier
     private LehrerStundenplanTab lehrerStundenplanTab;
@@ -62,6 +64,7 @@ public class MyTabPane extends TabPane {
         switch (benutzer.getRolle()) {
             case ADMINISTRATOR -> this.getTabs().addAll(
                     raumTab, lehrkraftTab, fachTab, klasseTab,
+                    schuelerVerwaltungTab,
                     stundenplanTab, vertretungTab
             );
             case LEHRER -> {
