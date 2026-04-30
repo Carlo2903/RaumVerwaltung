@@ -67,6 +67,7 @@ public class StundenplanViewModel implements Observer, StundenplanViewModelInter
     public void stundeLoeschen(Stunde stunde)  { model.stundeLoeschen(stunde); }
 
     public Stundenplan getAktuellerPlan()      { return model.getAktuellerPlan(); }
+    public Klasse getAktuelleKlasse()          { return model.getAktuelleKlasse(); }
 
     public List<Lehrkraft> findeLehrkraefteNachFach(Fach fach) {
         if (fach == null) return List.of();

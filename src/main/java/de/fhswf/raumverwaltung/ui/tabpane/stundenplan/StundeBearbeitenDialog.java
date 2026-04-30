@@ -388,6 +388,12 @@ public class StundeBearbeitenDialog {
 
             klasseBox.setValue(vorhandeneStunde.getKlasse());
 
+        } else {
+            // Neue Stunde: aktuell gefilterte Klasse vorbelegen
+            Klasse gefilterteKlasse = viewModel.getAktuelleKlasse();
+            if (gefilterteKlasse != null) {
+                klasseBox.setValue(gefilterteKlasse);
+            }
         }
 
 
