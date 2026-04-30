@@ -76,4 +76,38 @@ public class StundeDao extends GenericDao<Stunde> {
                 .setParameter("fach", fach)
                 .getResultList();
     }
+
+    /**
+     * Löscht eine Stunde inkl. aller zugehörigen Vertretungen in einer Transaktion.
+     * Verwendet JPQL-Bulk-DELETE, um Konflikte mit Hibernates orphanRemoval
+     * auf Stundenplan.stunden zu umgehen.
+     */
+    public void loeschenMitVertretungen(Long stundeId) {
+        try {
+            entityManager.getTransaction().begin();
+
+            // 1. Vertretungen dieser Stunde zuerst löschen (FK-Constraint)
+            entityManager.createQuery(
+                            "DELETE FROM Vertretung v WHERE v.stunde.id = :sid")
+                    .setParameter("sid", stundeId)
+                    .executeUpdate();
+
+            // 2. Stunde selbst löschen
+            entityManager.createQuery(
+                            "DELETE FROM Stunde s WHERE s.id = :sid")
+                    .setParameter("sid", stundeId)
+                    .executeUpdate();
+
+            entityManager.getTransaction().commit();
+        } catch (Exception e) {
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            throw new jakarta.persistence.PersistenceException(
+                    "Stunde konnte nicht gelöscht werden.", e);
+        }
+
+        // Cache leeren, da Bulk-DELETE den Persistence Context nicht aktualisiert
+        entityManager.clear();
+    }
 }

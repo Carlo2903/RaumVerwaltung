@@ -235,14 +235,26 @@ public class StundeBearbeitenDialog {
                                     "Trotzdem löschen?");
                     confirm.showAndWait().ifPresent(btn -> {
                         if (btn == ButtonType.OK) {
-                            viewModel.stundeLoeschen(vorhandeneStunde);
-                            dialog.close();
+                            try {
+                                viewModel.stundeLoeschen(vorhandeneStunde);
+                                dialog.close();
+                            } catch (Exception ex) {
+                                new Alert(Alert.AlertType.ERROR,
+                                        "Fehler beim Löschen: " + ex.getMessage())
+                                        .showAndWait();
+                            }
                         }
                     });
                 } else {
                     // Keine Vertretung – direkt löschen
-                    viewModel.stundeLoeschen(vorhandeneStunde);
-                    dialog.close();
+                    try {
+                        viewModel.stundeLoeschen(vorhandeneStunde);
+                        dialog.close();
+                    } catch (Exception ex) {
+                        new Alert(Alert.AlertType.ERROR,
+                                "Fehler beim Löschen: " + ex.getMessage())
+                                .showAndWait();
+                    }
                 }
             });
         }
