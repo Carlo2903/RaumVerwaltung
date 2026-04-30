@@ -9,6 +9,9 @@ public class KonfliktService {
     private final StundeDao stundeDao = new StundeDao();
 
     public void validiereStunde(Stunde neueStunde) throws PlanungException {
+
+
+
         // Null-Checks zuerst
         if (neueStunde.getZeitslot() == null) {
             throw new PlanungException("Unvollständige Daten", "Zeitslot muss gesetzt sein.");
@@ -50,6 +53,36 @@ public class KonfliktService {
             throw new PlanungException("Stundenplan-Konflikt", grund);
         }
         validiereWochenstunden(neueStunde);
+
+        validiereLeerkraftStunden(neueStunde);
+    }
+
+
+    private void validiereLeerkraftStunden(Stunde neueStunde) throws PlanungException {
+        if (neueStunde.getLehrkraft() == null) return;
+
+        int sollStunden = neueStunde.getLehrkraft().getSollStunden();
+        if (sollStunden <= 0) return;
+
+        // Wie viele Stunden hat die Lehrkraft bereits?
+        long aktuelleStunden = stundeDao
+                .findeNachStundenplan(neueStunde.getStundenplan()).stream()
+                .filter(s -> s.getLehrkraft() != null &&
+                        s.getLehrkraft().getId()
+                                .equals(neueStunde.getLehrkraft().getId()))
+                // Bei Bearbeitung: eigene Stunde nicht mitzählen
+                .filter(s -> neueStunde.getId() == null ||
+                        !s.getId().equals(neueStunde.getId()))
+                .count();
+
+        if (aktuelleStunden >= sollStunden) {
+            throw new PlanungException(
+                    "Wochenstunden überschritten",
+                    "Lehrkraft '" + neueStunde.getLehrkraft().getName() +
+                            "' hat bereits " + aktuelleStunden + " von " +
+                            sollStunden + " Wochenstunden."
+            );
+        }
     }
 
 

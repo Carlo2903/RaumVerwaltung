@@ -66,4 +66,10 @@ public class LehrerStundenplanViewModel implements Observer, StundenplanViewMode
                 stunde, model.getVertretungenProStunde()
         );
     }
+
+    @Override
+    public int getLehrkraftStunden(Lehrkraft lehrkraft) {
+        if (lehrkraft == null) return 0;
+        return model.getLehrkraftStunden().getOrDefault(lehrkraft.getId(), 0);
+    }
 }

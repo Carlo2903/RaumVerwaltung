@@ -17,5 +17,6 @@ public interface StundenplanViewModelInterface {
     Stundenplan getAktuellerPlan();
     int getStundenZaehler(Klasse klasse, Fach fach);
     String getVertretungslehrerName(Stunde stunde);
+    int getLehrkraftStunden(Lehrkraft lehrkraft);
 
 }

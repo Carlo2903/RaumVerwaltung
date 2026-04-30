@@ -66,11 +66,25 @@ public class VertretungsService {
     }
 
     // Schritt 3: Verfügbare Vertretungslehrer für einen Zeitslot und Datum
-    public List<Lehrkraft> findeVertretungskandidaten(Zeitslot zeitslot,
-                                                      LocalDate datum) {
-        return vertretungDao.findeVerfuegbareLehrer(zeitslot, datum);
+    public List<Lehrkraft> findeVertretungskandidaten(Zeitslot zeitslot, LocalDate datum) {
+        List<Lehrkraft> verfuegbare = vertretungDao.findeVerfuegbareLehrer(zeitslot, datum);
+
+        // NEU: Lehrkräfte filtern die Sollstunden noch nicht erreicht haben
+        return verfuegbare.stream()
+                .filter(l -> !hatSollstundenErreicht(l))
+                .toList();
     }
 
+    private boolean hatSollstundenErreicht(Lehrkraft lehrkraft) {
+        if (lehrkraft.getSollStunden() <= 0) return false;
+
+        long aktuelleStunden = stundeDao.findAll().stream()
+                .filter(s -> s.getLehrkraft() != null &&
+                        s.getLehrkraft().getId().equals(lehrkraft.getId()))
+                .count();
+
+        return aktuelleStunden >= lehrkraft.getSollStunden();
+    }
     // Schritt 4: Vertretung zuweisen
     public Vertretung weiseVertretungZu(Stunde stunde, Lehrkraft vertretungsLehrer,
                                         LocalDate datum, VertretungsGrund grund,

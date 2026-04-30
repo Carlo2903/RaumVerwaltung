@@ -33,6 +33,9 @@ public class LehrerStundenplanModel extends Observable {
     @Getter
     private List<Klasse> eigeneKlassen = new ArrayList<>();
 
+    @Getter
+    private Map<Long, Integer> lehrkraftStunden = new HashMap<>();
+
 
     public LehrerStundenplanModel(Lehrkraft lehrkraft) {
         this.eigeneLehrkraft = lehrkraft;
@@ -74,6 +77,7 @@ public class LehrerStundenplanModel extends Observable {
         stundenGrid          = new HashMap<>();
         stundenZaehler       = new HashMap<>();
         vertretungenProStunde = new HashMap<>();
+        lehrkraftStunden      = new HashMap<>();
 
         for (Wochentag tag : Wochentag.values()) {
             stundenGrid.put(tag, new HashMap<>());
@@ -95,6 +99,12 @@ public class LehrerStundenplanModel extends Observable {
             if (s.getKlasse() != null && s.getFach() != null) {
                 String key = s.getKlasse().getId() + "_" + s.getFach().getId();
                 stundenZaehler.merge(key, 1, Integer::sum);
+            }
+        });
+
+        alleStunden.forEach(s -> {
+            if (s.getLehrkraft() != null) {
+                lehrkraftStunden.merge(s.getLehrkraft().getId(), 1, Integer::sum);
             }
         });
 

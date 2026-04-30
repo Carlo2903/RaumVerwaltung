@@ -1,10 +1,13 @@
 package de.fhswf.raumverwaltung.ui.tabpane.stundenplan;
 
+import de.fhswf.raumverwaltung.MainApp;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.ui.util.EntityStringConverter;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.print.PageOrientation;
+import javafx.print.Printer;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
@@ -92,10 +95,79 @@ public class StundenplanRasterView extends BorderPane {
                     )
             );
 
-            header.getChildren().addAll(titel, new Separator(), lblKlasse, klasseBox);
+            Button btnExport = new Button("📄 PDF exportieren");
+            btnExport.setStyle(
+                    "-fx-background-color: #3d5a80;" +
+                            "-fx-text-fill: white;" +
+                            "-fx-background-radius: 6;" +
+                            "-fx-padding: 6 12 6 12;"
+            );
+            btnExport.setOnAction(e -> exportierePdf());
+
+            // Spacer damit Button rechts bleibt
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+
+            header.getChildren().addAll(
+                    titel, new Separator(), lblKlasse, klasseBox,
+                    spacer, btnExport // NEU
+            );
         }
 
         return header;
+    }
+
+
+    private void exportierePdf() {
+        javafx.print.PrinterJob job =
+                javafx.print.PrinterJob.createPrinterJob();
+
+        if (job == null) {
+            new Alert(Alert.AlertType.ERROR,
+                    "Kein Drucker verfügbar.").showAndWait();
+            return;
+        }
+
+        boolean drucken = job.showPrintDialog(MainApp.primaryStage);
+
+        if (drucken) {
+            javafx.print.PageLayout pageLayout = job.getPrinter()
+                    .createPageLayout(
+                            javafx.print.Paper.A4,
+                            PageOrientation.PORTRAIT,
+                            Printer.MarginType.EQUAL
+                    );
+
+            double breite = this.getWidth();
+            double hoehe  = this.getHeight();
+
+            if (breite == 0 || hoehe == 0) {
+                new Alert(Alert.AlertType.WARNING,
+                        "Stundenplan noch nicht vollständig geladen.")
+                        .showAndWait();
+                return;
+            }
+
+            double scaleX = pageLayout.getPrintableWidth()  / breite;
+            double scaleY = pageLayout.getPrintableHeight() / hoehe;
+            double scale  = Math.min(scaleX, scaleY);
+
+            javafx.scene.transform.Scale transform =
+                    new javafx.scene.transform.Scale(scale, scale);
+
+            this.getTransforms().add(transform);
+
+            boolean erfolg = job.printPage(pageLayout, this);
+
+            this.getTransforms().remove(transform);
+
+            if (erfolg) {
+                job.endJob();
+            } else {
+                new Alert(Alert.AlertType.ERROR,
+                        "Drucken fehlgeschlagen.").showAndWait();
+            }
+        }
     }
 
     // ---------------------------------------------------------------
@@ -318,6 +390,24 @@ public class StundenplanRasterView extends BorderPane {
             StackPane.setAlignment(lblZaehler, Pos.TOP_RIGHT);
             StackPane.setMargin(lblZaehler, new Insets(4, 4, 0, 0));
             zelle.getChildren().add(lblZaehler);
+        }
+
+        if (stunde.getLehrkraft() != null) {
+            int aktuell = viewModel.getLehrkraftStunden(stunde.getLehrkraft());
+            int max     = stunde.getLehrkraft().getSollStunden();
+
+            if (aktuell > max) {
+                // Überschritten – roter Badge
+                Label lblWarnung = new Label(
+                        "⚠ " + aktuell + "/" + max + " Std"
+                );
+                lblWarnung.setStyle(
+                        "-fx-font-size: 9;" +
+                                "-fx-text-fill: #cf222e;" +
+                                "-fx-font-weight: bold;"
+                );
+                inhalt.getChildren().add(lblWarnung);
+            }
         }
 
         if (readOnly) {
