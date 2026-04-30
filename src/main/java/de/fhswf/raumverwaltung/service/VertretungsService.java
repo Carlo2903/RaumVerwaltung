@@ -18,6 +18,7 @@ public class VertretungsService {
     private final AbwesenheitDao abwesenheitDao = new AbwesenheitDao();
     private final VertretungDao  vertretungDao  = new VertretungDao();
     private final StundeDao      stundeDao      = new StundeDao();
+    private final SperrzeitDao sperrzeitDao = new SperrzeitDao();
 
 
     private VertretungsService() {}
@@ -66,13 +67,21 @@ public class VertretungsService {
     }
 
     // Schritt 3: Verfügbare Vertretungslehrer für einen Zeitslot und Datum
-    public List<Lehrkraft> findeVertretungskandidaten(Zeitslot zeitslot, LocalDate datum) {
-        List<Lehrkraft> verfuegbare = vertretungDao.findeVerfuegbareLehrer(zeitslot, datum);
+    public List<Lehrkraft> findeVertretungskandidaten(Zeitslot zeitslot,
+                                                      LocalDate datum) {
+        List<Lehrkraft> verfuegbare =
+                vertretungDao.findeVerfuegbareLehrer(zeitslot, datum);
 
-        // NEU: Lehrkräfte filtern die Sollstunden noch nicht erreicht haben
         return verfuegbare.stream()
                 .filter(l -> !hatSollstundenErreicht(l))
+                .filter(l -> !hatSperrzeit(l, zeitslot))
                 .toList();
+    }
+
+    private boolean hatSperrzeit(Lehrkraft lehrkraft, Zeitslot zeitslot) {
+        return sperrzeitDao.findeNachLehrkraft(lehrkraft).stream()
+                .anyMatch(sz -> sz.getZeitslot().getId()
+                        .equals(zeitslot.getId()));
     }
 
     private boolean hatSollstundenErreicht(Lehrkraft lehrkraft) {
@@ -118,6 +127,8 @@ public class VertretungsService {
 
         return vertretung;
     }
+
+
 
     // Hilfsmethode: Wochentage zwischen zwei Daten berechnen
     private List<Wochentag> berechneWochentage(LocalDate von, LocalDate bis) {

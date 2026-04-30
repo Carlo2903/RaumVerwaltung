@@ -1,5 +1,6 @@
 package de.fhswf.raumverwaltung.service;
 
+import de.fhswf.raumverwaltung.db.dao.SperrzeitDao;
 import de.fhswf.raumverwaltung.db.dao.StundeDao;
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
@@ -7,9 +8,10 @@ import java.util.List;
 
 public class KonfliktService {
     private final StundeDao stundeDao = new StundeDao();
+    private final SperrzeitDao sperrzeitDao = new SperrzeitDao();
+
 
     public void validiereStunde(Stunde neueStunde) throws PlanungException {
-
 
 
         // Null-Checks zuerst
@@ -55,8 +57,28 @@ public class KonfliktService {
         validiereWochenstunden(neueStunde);
 
         validiereLeerkraftStunden(neueStunde);
+        validiereSperrzeiten(neueStunde);
     }
 
+
+    private void validiereSperrzeiten(Stunde neueStunde) throws PlanungException {
+        if (neueStunde.getLehrkraft() == null ||
+                neueStunde.getZeitslot() == null) return;
+
+        boolean istGesperrt = sperrzeitDao
+                .findeNachLehrkraft(neueStunde.getLehrkraft())
+                .stream()
+                .anyMatch(sz -> sz.getZeitslot().getId()
+                        .equals(neueStunde.getZeitslot().getId()));
+
+        if (istGesperrt) {
+            throw new PlanungException(
+                    "Sperrzeit",
+                    "Lehrkraft '" + neueStunde.getLehrkraft().getName() +
+                            "' hat zu diesem Zeitslot eine Sperrzeit eingetragen."
+            );
+        }
+    }
 
     private void validiereLeerkraftStunden(Stunde neueStunde) throws PlanungException {
         if (neueStunde.getLehrkraft() == null) return;

@@ -20,14 +20,36 @@ public class SperrzeitDao extends GenericDao<Sperrzeit> {
                 .getResultList();
     }
 
-    public void loescheAlleVonLehrkraft(Lehrkraft lehrkraft) {
-        entityManager.getTransaction().begin();
-        entityManager
-                .createQuery(
-                        "DELETE FROM Sperrzeit s WHERE s.lehrkraft = :lehrkraft")
-                .setParameter("lehrkraft", lehrkraft)
-                .executeUpdate();
-        entityManager.getTransaction().commit();
-        entityManager.clear();
+    public void speichereAlleVonLehrkraft(Lehrkraft lehrkraft,
+                                          List<Zeitslot> zeitslots) {
+        try {
+            entityManager.getTransaction().begin();
+
+            // Erst alle löschen
+            entityManager
+                    .createQuery(
+                            "DELETE FROM Sperrzeit s WHERE s.lehrkraft = :lk")
+                    .setParameter("lk", lehrkraft)
+                    .executeUpdate();
+
+            // Dann alle neu anlegen – in derselben Transaktion
+            zeitslots.forEach(zeitslot -> {
+                Sperrzeit sz = Sperrzeit.builder()
+                        .lehrkraft(lehrkraft)
+                        .zeitslot(zeitslot)
+                        .build();
+                entityManager.persist(sz);
+            });
+
+            entityManager.getTransaction().commit();
+            entityManager.clear();
+        } catch (Exception e) {
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            throw new jakarta.persistence.PersistenceException(
+                    "Sperrzeiten konnten nicht gespeichert werden.", e
+            );
+        }
     }
 }

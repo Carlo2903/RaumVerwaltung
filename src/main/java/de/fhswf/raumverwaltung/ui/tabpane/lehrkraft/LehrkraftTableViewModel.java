@@ -3,6 +3,8 @@ package de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
 import de.fhswf.raumverwaltung.db.dao.FachDao;
 import de.fhswf.raumverwaltung.db.entities.Fach;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
+import de.fhswf.raumverwaltung.db.entities.Sperrzeit;
+import de.fhswf.raumverwaltung.db.entities.Zeitslot;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import lombok.Getter;
@@ -29,6 +31,14 @@ public class LehrkraftTableViewModel implements Observer {
     @Getter
     private final StringProperty fehlerProperty = new SimpleStringProperty();
 
+    @Getter
+    private final ObservableList<Sperrzeit> sperrzeiten
+            = FXCollections.observableArrayList();
+
+    @Getter
+    private final ObservableList<Zeitslot> alleZeitslots
+            = FXCollections.observableArrayList();
+
     private Lehrkraft aktuellerDatensatz = null;
 
     public LehrkraftTableViewModel() {
@@ -38,16 +48,25 @@ public class LehrkraftTableViewModel implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        // Cache leeren damit Fächer frisch geladen werden
         fachDao.clearCache();
-
         List<LehrkraftTableEntity> tmp = model.getLehrkraefte().stream()
                 .map(LehrkraftTableEntity::new)
                 .collect(Collectors.toList());
         lehrkraefteProperty.set(FXCollections.observableList(tmp));
-
-        // Fächer-Liste für Checkboxen neu laden
         faecher.setAll(fachDao.findAll());
+
+        // NEU
+        sperrzeiten.setAll(model.getAktuelleSperrzeiten());
+        alleZeitslots.setAll(model.getAlleZeitslots());
+    }
+
+    public void ladeSperrzeiten(Lehrkraft lehrkraft) {
+        model.ladeSperrzeiten(lehrkraft);
+    }
+
+    public void speichereSperrzeiten(Lehrkraft lehrkraft,
+                                     List<Zeitslot> gesperrteZeitslots) {
+        model.speichereSperrzeiten(lehrkraft, gesperrteZeitslots);
     }
 
     public void refresh() {

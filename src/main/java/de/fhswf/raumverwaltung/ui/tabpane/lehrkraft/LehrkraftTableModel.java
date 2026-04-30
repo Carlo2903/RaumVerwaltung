@@ -1,8 +1,14 @@
 package de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
 
+import de.fhswf.raumverwaltung.db.dao.FachDao;
 import de.fhswf.raumverwaltung.db.dao.LehrkraftDao;
+import de.fhswf.raumverwaltung.db.dao.SperrzeitDao;
+import de.fhswf.raumverwaltung.db.dao.ZeitslotDao;
 import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
 import de.fhswf.raumverwaltung.db.entities.Raum;
+import de.fhswf.raumverwaltung.db.entities.Sperrzeit;
+import de.fhswf.raumverwaltung.db.entities.Zeitslot;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +19,19 @@ public class LehrkraftTableModel extends Observable {
     private static LehrkraftTableModel instance;
     private final LehrkraftDao dao = new LehrkraftDao();
     private List<Lehrkraft> lehrkraefte = new ArrayList<>();
+
+    private final SperrzeitDao sperrzeitDao = new SperrzeitDao();
+    private final ZeitslotDao  zeitslotDao  = new ZeitslotDao();
+    private final FachDao  fachDao  = new FachDao();
+
+    @Getter
+    private List<Sperrzeit> aktuelleSperrzeiten = new ArrayList<>();
+
+    @Getter
+    private List<Zeitslot> alleZeitslots = new ArrayList<>();
+
+
+
 
     private LehrkraftTableModel() {}
 
@@ -33,9 +52,28 @@ public class LehrkraftTableModel extends Observable {
 
     public void loadAll() {
         dao.clearCache();
-        lehrkraefte = dao.findAll();
+        fachDao.clearCache();     // falls vorhanden
+        zeitslotDao.clearCache();
+        this.lehrkraefte   = dao.findAll();
+        this.alleZeitslots = zeitslotDao.findAll();
         setChanged();
         notifyObservers();
+    }
+
+    public void ladeSperrzeiten(Lehrkraft lehrkraft) {
+        if (lehrkraft == null) {
+            aktuelleSperrzeiten = new ArrayList<>();
+        } else {
+            aktuelleSperrzeiten = sperrzeitDao.findeNachLehrkraft(lehrkraft);
+        }
+        setChanged();
+        notifyObservers();
+    }
+
+    public void speichereSperrzeiten(Lehrkraft lehrkraft,
+                                     List<Zeitslot> gesperrteZeitslots) {
+        sperrzeitDao.speichereAlleVonLehrkraft(lehrkraft, gesperrteZeitslots);
+        ladeSperrzeiten(lehrkraft);
     }
 
     public void speichern(Lehrkraft lehrkraft) {

@@ -1,10 +1,9 @@
 package de.fhswf.raumverwaltung.ui.tabpane.lehrkraft;
 
-import de.fhswf.raumverwaltung.db.entities.Fach;
-import de.fhswf.raumverwaltung.db.entities.Lehrkraft;
+import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
 import de.fhswf.raumverwaltung.ui.tabpane.Reloadable;
-import javafx.collections.ObservableList;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -24,8 +23,17 @@ public class LehrkraftTab extends MyTab implements Reloadable {
     private final TextField        kuerzelField = new TextField();
     private final Spinner<Integer> stdSpinner   = new Spinner<>(0, 40, 20);
 
-    private final Map<Fach, CheckBox> fachCheckboxen = new HashMap<>();
-    private final HBox                faecherBox     = new HBox(12);
+    private final Map<Fach, CheckBox>    fachCheckboxen     = new HashMap<>();
+    private final HBox                   faecherBox         = new HBox(12);
+
+    // Sperrzeiten
+    private final GridPane               sperrzeitGrid      = new GridPane();
+    private final Map<String, CheckBox>  sperrzeitCheckboxen = new HashMap<>();
+
+    private static final Wochentag[] WOCHENTAGE = {
+            Wochentag.MONTAG, Wochentag.DIENSTAG, Wochentag.MITTWOCH,
+            Wochentag.DONNERSTAG, Wochentag.FREITAG
+    };
 
     public LehrkraftTab() {
         super("Lehrkräfte");
@@ -34,11 +42,19 @@ public class LehrkraftTab extends MyTab implements Reloadable {
     }
 
     private void beobachteViewModel() {
-        // Fächer für Checkboxen – kommen aus ViewModel
         viewModel.getFaecher().addListener(
-                (javafx.collections.ListChangeListener<Fach>) change -> {
-                    baueFachCheckboxen(viewModel.getFaecher());
-                }
+                (ListChangeListener<Fach>) c ->
+                        baueFachCheckboxen(viewModel.getFaecher())
+        );
+
+        // Zeitslots geladen → Grid aufbauen
+        viewModel.getAlleZeitslots().addListener(
+                (ListChangeListener<Zeitslot>) c -> baueSperrzeitGrid()
+        );
+
+        // Sperrzeiten geändert → Grid aktualisieren
+        viewModel.getSperrzeiten().addListener(
+                (ListChangeListener<Sperrzeit>) c -> aktualisiereSperrzeitGrid()
         );
 
         table.getSelectionModel().selectedItemProperty().addListener(
@@ -46,6 +62,7 @@ public class LehrkraftTab extends MyTab implements Reloadable {
                     if (n != null) {
                         viewModel.datensatzAuswaehlen(n.getLehrkraft());
                         fillFormAusViewModel();
+                        viewModel.ladeSperrzeiten(n.getLehrkraft());
                     }
                 }
         );
@@ -53,22 +70,28 @@ public class LehrkraftTab extends MyTab implements Reloadable {
         viewModel.refresh();
     }
 
-    private void baueFachCheckboxen(ObservableList<Fach> faecher) {
-        faecherBox.getChildren().clear();
-        fachCheckboxen.clear();
-        for (Fach fach : faecher) {
-            CheckBox cb = new CheckBox(fach.getBezeichnung());
-            fachCheckboxen.put(fach, cb);
-            faecherBox.getChildren().add(cb);
-        }
-    }
+    // ---------------------------------------------------------------
+    // Layout
+    // ---------------------------------------------------------------
 
     private BorderPane buildLayout() {
         BorderPane pane = new BorderPane();
         pane.setCenter(table);
-        pane.setBottom(buildForm());
+
+        ScrollPane formScroll = new ScrollPane(buildUnten());
+        formScroll.setFitToWidth(true);
+        pane.setBottom(formScroll);
+
         return pane;
     }
+
+    private VBox buildUnten() {
+        return new VBox(buildForm(), buildSperrzeitSektion());
+    }
+
+    // ---------------------------------------------------------------
+    // Stammdaten-Formular
+    // ---------------------------------------------------------------
 
     private VBox buildForm() {
         nameField.setPromptText("Name");
@@ -142,6 +165,134 @@ public class LehrkraftTab extends MyTab implements Reloadable {
         return form;
     }
 
+    // ---------------------------------------------------------------
+    // Sperrzeiten-Sektion
+    // ---------------------------------------------------------------
+
+    private VBox buildSperrzeitSektion() {
+        Label titel = new Label("Sperrzeiten");
+        titel.setStyle("-fx-font-weight: bold; -fx-font-size: 13;");
+
+        Label hinweis = new Label(
+                "✓ = Lehrkraft ist zu diesem Zeitslot nicht verfügbar"
+        );
+        hinweis.setStyle("-fx-font-size: 11; -fx-text-fill: #555;");
+
+        sperrzeitGrid.setHgap(6);
+        sperrzeitGrid.setVgap(6);
+        sperrzeitGrid.setPadding(new Insets(8));
+
+        // Grid initial aufbauen falls Zeitslots schon geladen
+        if (!viewModel.getAlleZeitslots().isEmpty()) {
+            baueSperrzeitGrid();
+        }
+
+        Button btnSpeichern = new Button("Sperrzeiten speichern");
+        btnSpeichern.setStyle(
+                "-fx-background-color: #3d5a80;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-background-radius: 6;"
+        );
+        btnSpeichern.setOnAction(e -> speichereSperrzeiten());
+
+        VBox sektion = new VBox(8, titel, hinweis,
+                sperrzeitGrid, btnSpeichern);
+        sektion.setPadding(new Insets(12));
+        sektion.setStyle(
+                "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1 0 0 0;" +
+                        "-fx-background-color: white;"
+        );
+        return sektion;
+    }
+
+    private void baueSperrzeitGrid() {
+        sperrzeitGrid.getChildren().clear();
+        sperrzeitCheckboxen.clear();
+
+        String[] tage = {"MO", "DI", "MI", "DO", "FR"};
+
+        // Kopfzeile
+        for (int i = 0; i < tage.length; i++) {
+            Label lbl = new Label(tage[i]);
+            lbl.setStyle("-fx-font-weight: bold;");
+            lbl.setPrefWidth(50);
+            lbl.setAlignment(Pos.CENTER);
+            sperrzeitGrid.add(lbl, i + 1, 0);
+        }
+
+        // Zeilen: Stunden 1–6
+        for (int stunde = 1; stunde <= 6; stunde++) {
+            Label stdLabel = new Label(stunde + ".");
+            stdLabel.setStyle("-fx-font-weight: bold;");
+            sperrzeitGrid.add(stdLabel, 0, stunde);
+
+            for (int tagIdx = 0; tagIdx < WOCHENTAGE.length; tagIdx++) {
+                CheckBox cb = new CheckBox();
+                cb.setPrefWidth(50);
+                cb.setAlignment(Pos.CENTER);
+
+                // Typsicherer Key
+                String key = WOCHENTAGE[tagIdx].name() + "_" + stunde;
+                sperrzeitCheckboxen.put(key, cb);
+
+                sperrzeitGrid.add(cb, tagIdx + 1, stunde);
+            }
+        }
+    }
+
+    private void aktualisiereSperrzeitGrid() {
+        // Alle zurücksetzen
+        sperrzeitCheckboxen.values().forEach(cb -> cb.setSelected(false));
+
+        // Gesperrte markieren
+        viewModel.getSperrzeiten().forEach(sz -> {
+            String key = sz.getZeitslot().getWochentag().name() + "_" +
+                    sz.getZeitslot().getStundenNummer();
+            CheckBox cb = sperrzeitCheckboxen.get(key);
+            if (cb != null) cb.setSelected(true);
+        });
+    }
+
+    private void speichereSperrzeiten() {
+        Lehrkraft lehrkraft = viewModel.getAktuellerDatensatz();
+        if (lehrkraft == null) {
+            new Alert(Alert.AlertType.WARNING,
+                    "Bitte zuerst eine Lehrkraft auswählen.").showAndWait();
+            return;
+        }
+
+        // Gesperrte Zeitslots aus Map einsammeln
+        List<Zeitslot> gesperrt = viewModel.getAlleZeitslots().stream()
+                .filter(z -> {
+                    String key = z.getWochentag().name() + "_" +
+                            z.getStundenNummer();
+                    CheckBox cb = sperrzeitCheckboxen.get(key);
+                    return cb != null && cb.isSelected();
+                })
+                .toList();
+
+        viewModel.speichereSperrzeiten(lehrkraft, gesperrt);
+
+        new Alert(Alert.AlertType.INFORMATION,
+                "Sperrzeiten erfolgreich gespeichert.").showAndWait();
+    }
+
+    // ---------------------------------------------------------------
+    // Hilfsmethoden
+    // ---------------------------------------------------------------
+
+    private void baueFachCheckboxen(
+            javafx.collections.ObservableList<Fach> faecher) {
+        faecherBox.getChildren().clear();
+        fachCheckboxen.clear();
+        for (Fach fach : faecher) {
+            CheckBox cb = new CheckBox(fach.getBezeichnung());
+            fachCheckboxen.put(fach, cb);
+            faecherBox.getChildren().add(cb);
+        }
+    }
+
     private void fillFormAusViewModel() {
         Lehrkraft lk = viewModel.getAktuellerDatensatz();
         if (lk == null) return;
@@ -159,6 +310,7 @@ public class LehrkraftTab extends MyTab implements Reloadable {
         kuerzelField.clear();
         stdSpinner.getValueFactory().setValue(20);
         fachCheckboxen.values().forEach(cb -> cb.setSelected(false));
+        sperrzeitCheckboxen.values().forEach(cb -> cb.setSelected(false));
         table.getSelectionModel().clearSelection();
     }
 
