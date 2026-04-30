@@ -145,6 +145,8 @@ public class SchuelerPortalModel extends Observable implements Observer {
     private void ladeAktuelleWoche() {
         if (aktuelleKlasse == null || aktuellerPlan == null) {
             wochenStunden = new ArrayList<>();
+            setChanged();
+            notifyObservers();
             return;
         }
 
@@ -158,6 +160,9 @@ public class SchuelerPortalModel extends Observable implements Observer {
                 wochenStunden.addAll(filterStunden(aktuelleKlasse, wochentag, tag));
             }
         }
+
+        setChanged();
+        notifyObservers();
     }
 
     private List<Stunde> filterStunden(Klasse klasse, Wochentag wochentag,
