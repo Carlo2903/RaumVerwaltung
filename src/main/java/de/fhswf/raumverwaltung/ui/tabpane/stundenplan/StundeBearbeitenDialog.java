@@ -213,32 +213,38 @@ public class StundeBearbeitenDialog {
         // Löschen-Button nur bei bestehender Stunde
 
         if (vorhandeneStunde != null) {
-
             ButtonType btnLoeschen = new ButtonType("Löschen",
-
                     ButtonBar.ButtonData.LEFT);
-
             dialog.getDialogPane().getButtonTypes().add(btnLoeschen);
 
-
             Button loeschenBtn = (Button) dialog.getDialogPane()
-
                     .lookupButton(btnLoeschen);
-
             loeschenBtn.setStyle(
-
                     "-fx-background-color: #cf222e; -fx-text-fill: white;"
-
             );
 
             loeschenBtn.setOnAction(e -> {
+                // NEU: Prüfen ob Vertretung vorhanden
+                boolean hatVertretung = vorhandeneStunde.isIstVertretung();
 
-                viewModel.stundeLoeschen(vorhandeneStunde);
-
-                dialog.close();
-
+                if (hatVertretung) {
+                    // Warnung anzeigen – Benutzer muss bestätigen
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Diese Stunde hat eine zugewiesene Vertretung. " +
+                                    "Beim Löschen wird die Vertretung ebenfalls entfernt. " +
+                                    "Trotzdem löschen?");
+                    confirm.showAndWait().ifPresent(btn -> {
+                        if (btn == ButtonType.OK) {
+                            viewModel.stundeLoeschen(vorhandeneStunde);
+                            dialog.close();
+                        }
+                    });
+                } else {
+                    // Keine Vertretung – direkt löschen
+                    viewModel.stundeLoeschen(vorhandeneStunde);
+                    dialog.close();
+                }
             });
-
         }
 
 

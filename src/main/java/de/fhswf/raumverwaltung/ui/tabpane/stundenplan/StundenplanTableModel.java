@@ -120,6 +120,10 @@ public class StundenplanTableModel extends Observable {
 
     // Stunde löschen
     public void stundeLoeschen(Stunde stunde) {
+        // Vertretungen dieser Stunde zuerst löschen
+        vertretungDao.findeNachStunden(List.of(stunde))
+                .forEach(vertretungDao::remove);
+
         stundeDao.remove(stunde);
         bauGrid();
     }
