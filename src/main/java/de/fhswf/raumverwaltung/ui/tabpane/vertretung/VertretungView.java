@@ -38,6 +38,7 @@ public class VertretungView extends VBox {
         this.setStyle("-fx-background-color: #f5f5f5;");
 
         this.getChildren().addAll(
+                buildSektion0(),
                 buildSektion1(),
                 buildSektion2(),
                 buildSektion3()
@@ -61,6 +62,94 @@ public class VertretungView extends VBox {
     }
 
 
+    private VBox buildSektion0() {
+        Label titel = new Label("① Übersicht – Abwesenheiten & Vertretungen");
+        titel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
+
+        TableView<AbwesenheitUebersicht> table = new TableView<>();
+        table.setPrefHeight(180);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<AbwesenheitUebersicht, String> colLehrer
+                = new TableColumn<>("Lehrkraft");
+        TableColumn<AbwesenheitUebersicht, String> colZeitraum
+                = new TableColumn<>("Zeitraum");
+        TableColumn<AbwesenheitUebersicht, String> colGrund
+                = new TableColumn<>("Grund");
+        TableColumn<AbwesenheitUebersicht, String> colStatus
+                = new TableColumn<>("Vertretungen");
+
+        colLehrer.setCellValueFactory(data ->
+                new javafx.beans.property.SimpleStringProperty(
+                        data.getValue().abwesenheit().getLehrkraft() != null
+                                ? data.getValue().abwesenheit().getLehrkraft().getName()
+                                : "–"
+                )
+        );
+        colZeitraum.setCellValueFactory(data ->
+                new javafx.beans.property.SimpleStringProperty(
+                        data.getValue().abwesenheit().getVon() + " – " +
+                                data.getValue().abwesenheit().getBis()
+                )
+        );
+        colGrund.setCellValueFactory(data ->
+                new javafx.beans.property.SimpleStringProperty(
+                        data.getValue().abwesenheit().getGrund() != null
+                                ? data.getValue().abwesenheit().getGrund().toString()
+                                : "–"
+                )
+        );
+        colStatus.setCellValueFactory(data ->
+                new javafx.beans.property.SimpleStringProperty(
+                        data.getValue().getStatusText()
+                )
+        );
+
+        // Farbe über Record-Methode – kein String-Parsing
+        colStatus.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                setText(item);
+                AbwesenheitUebersicht row = getTableView()
+                        .getItems().get(getIndex());
+                setStyle(row.isVollstaendig()
+                        ? "-fx-text-fill: #1a7f37; -fx-font-weight: bold;"
+                        : "-fx-text-fill: #bf8700; -fx-font-weight: bold;"
+                );
+            }
+        });
+
+        table.getColumns().addAll(colLehrer, colZeitraum, colGrund, colStatus);
+
+        // Klick → Abwesenheit direkt laden
+        table.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                AbwesenheitUebersicht selected =
+                        table.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    viewModel.abwesenheitAuswaehlen(selected);
+                }
+            }
+        });
+
+
+        table.setItems(viewModel.getAbwesenheitUebersicht());
+
+        VBox sektion = new VBox(8, titel, table);
+        sektion.setPadding(new Insets(16));
+        sektion.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);"
+        );
+        return sektion;
+    }
 
     // ---------------------------------------------------------------
     // Sektion 1: Abwesenheit erfassen
@@ -168,20 +257,38 @@ public class VertretungView extends VBox {
 
         // "Vertretung zuweisen" Button in jeder Zeile
         colAktion.setCellFactory(col -> new TableCell<>() {
-            private final Button btn = new Button("Vertretung zuweisen →");
+            private final Button btnZuweisen = new Button("Vertretung zuweisen →");
+            private final Button btnLoeschen = new Button("✕ Vertretung entfernen");
 
             {
-                btn.setStyle(
+                btnZuweisen.setStyle(
                         "-fx-background-color: #3d5a80;" +
                                 "-fx-text-fill: white;" +
                                 "-fx-background-radius: 6;" +
                                 "-fx-font-size: 11;"
                 );
-                btn.setOnAction(e -> {
+                btnLoeschen.setStyle(
+                        "-fx-background-color: #cf222e;" +
+                                "-fx-text-fill: white;" +
+                                "-fx-background-radius: 6;" +
+                                "-fx-font-size: 11;"
+                );
+
+                btnZuweisen.setOnAction(e -> {
                     Stunde stunde = getTableView().getItems().get(getIndex());
-                    LocalDate datum = viewModel.getAusgewaehlteStunde() != null
-                            ? LocalDate.now() : vonPicker.getValue();
+                    LocalDate datum = vonPicker.getValue();
                     viewModel.stundeAuswaehlen(stunde, datum);
+                });
+
+                btnLoeschen.setOnAction(e -> {
+                    Stunde stunde = getTableView().getItems().get(getIndex());
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Vertretung für diese Stunde wirklich entfernen?");
+                    confirm.showAndWait().ifPresent(btn -> {
+                        if (btn == ButtonType.OK) {
+                            viewModel.loescheVertretung(stunde);
+                        }
+                    });
                 });
             }
 
@@ -190,11 +297,11 @@ public class VertretungView extends VBox {
                 super.updateItem(item, empty);
                 if (empty) {
                     setGraphic(null);
-                } else {
-                    Stunde stunde = getTableView().getItems().get(getIndex());
-                    // Bereits zugewiesene Stunden: kein Button
-                    setGraphic(stunde.isIstVertretung() ? null : btn);
+                    return;
                 }
+                Stunde stunde = getTableView().getItems().get(getIndex());
+                // Vertretung zugewiesen → Löschen-Button, sonst Zuweisen-Button
+                setGraphic(stunde.isIstVertretung() ? btnLoeschen : btnZuweisen);
             }
         });
 

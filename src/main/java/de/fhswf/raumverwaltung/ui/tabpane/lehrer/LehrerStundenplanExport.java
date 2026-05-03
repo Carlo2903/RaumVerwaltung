@@ -5,12 +5,15 @@ import de.fhswf.raumverwaltung.ui.tabpane.MyTab;
 import de.fhswf.raumverwaltung.ui.tabpane.Reloadable;
 import de.fhswf.raumverwaltung.ui.tabpane.stundenplan.StundenplanRasterView;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.print.PageOrientation;
 import javafx.print.Printer;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 
 public abstract class LehrerStundenplanExport extends MyTab implements Reloadable {
 
@@ -34,7 +37,10 @@ public abstract class LehrerStundenplanExport extends MyTab implements Reloadabl
         );
         btnExport.setOnAction(e -> exportierePdf());
 
-        HBox toolbar = new HBox(btnExport);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox toolbar = new HBox(spacer, btnExport);
         toolbar.setPadding(new Insets(8, 16, 8, 16));
         toolbar.setStyle(
                 "-fx-background-color: white;" +
@@ -46,8 +52,11 @@ public abstract class LehrerStundenplanExport extends MyTab implements Reloadabl
         layout.setTop(toolbar);
         layout.setCenter(rasterView);
 
+
+
         this.setContent(layout);
     }
+
 
 
 

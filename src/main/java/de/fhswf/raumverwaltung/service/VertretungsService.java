@@ -72,6 +72,12 @@ public class VertretungsService {
         List<Lehrkraft> verfuegbare =
                 vertretungDao.findeVerfuegbareLehrer(zeitslot, datum);
 
+        List<Long> gesperrteLehrkraftIds =
+                sperrzeitDao.findeNachZeitslot(zeitslot).stream()
+                        .map(sz -> sz.getLehrkraft().getId())
+                        .toList();
+
+
         return verfuegbare.stream()
                 .filter(l -> !hatSollstundenErreicht(l))
                 .filter(l -> !hatSperrzeit(l, zeitslot))
@@ -126,6 +132,10 @@ public class VertretungsService {
         stundeDao.merge(stunde);
 
         return vertretung;
+    }
+
+    public void loescheVertretung(Vertretung vertretung) {
+        vertretungDao.loescheVertretungMitStundenReset(vertretung);
     }
 
 

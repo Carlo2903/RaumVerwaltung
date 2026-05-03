@@ -4,6 +4,7 @@ import de.fhswf.raumverwaltung.db.entities.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class VertretungDao extends GenericDao<Vertretung> {
 
@@ -47,6 +48,17 @@ public class VertretungDao extends GenericDao<Vertretung> {
                 .getResultList();
     }
 
+    public List<Vertretung> findeAlleAktiven() {
+        clearCache();
+        return entityManager
+                .createQuery(
+                        "SELECT v FROM Vertretung v " +
+                                "LEFT JOIN FETCH v.stunde " +
+                                "LEFT JOIN FETCH v.vertretungsLehrer",
+                        Vertretung.class)
+                .getResultList();
+    }
+
     public List<Vertretung> findeNachStundenplan(Stundenplan stundenplan) {
         clearCache();
         return entityManager
@@ -58,5 +70,42 @@ public class VertretungDao extends GenericDao<Vertretung> {
                         Vertretung.class)
                 .setParameter("plan", stundenplan)
                 .getResultList();
+    }
+
+    public Optional<Vertretung> findeNachStunde(Stunde stunde) {
+        clearCache();
+        return entityManager
+                .createQuery(
+                        "SELECT v FROM Vertretung v " +
+                                "LEFT JOIN FETCH v.vertretungsLehrer " +
+                                "WHERE v.stunde = :stunde",
+                        Vertretung.class)
+                .setParameter("stunde", stunde)
+                .getResultStream()
+                .findFirst();
+    }
+
+    public void loescheVertretungMitStundenReset(Vertretung vertretung) {
+        try {
+            entityManager.getTransaction().begin();
+
+            // Stunde zurücksetzen
+            Stunde stunde = entityManager.merge(vertretung.getStunde());
+            stunde.setIstVertretung(false);
+
+            // Vertretung löschen
+            Vertretung managed = entityManager.merge(vertretung);
+            entityManager.remove(managed);
+
+            entityManager.getTransaction().commit();
+            entityManager.clear();
+        } catch (Exception e) {
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            throw new jakarta.persistence.PersistenceException(
+                    "Vertretung konnte nicht gelöscht werden.", e
+            );
+        }
     }
 }

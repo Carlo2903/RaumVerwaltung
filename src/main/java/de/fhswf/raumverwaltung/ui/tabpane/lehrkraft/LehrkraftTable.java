@@ -29,6 +29,7 @@ public class LehrkraftTable extends TableView<LehrkraftTableEntity> {
                 }
         );
 
+
         // Initial setzen falls schon Daten da sind
         if (viewModel.getLehrkraefteProperty().get() != null) {
             setItems(viewModel.getLehrkraefteProperty().get());

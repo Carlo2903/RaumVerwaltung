@@ -20,19 +20,29 @@ public class SperrzeitDao extends GenericDao<Sperrzeit> {
                 .getResultList();
     }
 
+    public List<Sperrzeit> findeNachZeitslot(Zeitslot zeitslot) {
+        clearCache();
+        return entityManager
+                .createQuery(
+                        "SELECT s FROM Sperrzeit s " +
+                                "LEFT JOIN FETCH s.lehrkraft " +
+                                "WHERE s.zeitslot = :zeitslot",
+                        Sperrzeit.class)
+                .setParameter("zeitslot", zeitslot)
+                .getResultList();
+    }
+
     public void speichereAlleVonLehrkraft(Lehrkraft lehrkraft,
                                           List<Zeitslot> zeitslots) {
         try {
             entityManager.getTransaction().begin();
 
-            // Erst alle löschen
             entityManager
                     .createQuery(
                             "DELETE FROM Sperrzeit s WHERE s.lehrkraft = :lk")
                     .setParameter("lk", lehrkraft)
                     .executeUpdate();
 
-            // Dann alle neu anlegen – in derselben Transaktion
             zeitslots.forEach(zeitslot -> {
                 Sperrzeit sz = Sperrzeit.builder()
                         .lehrkraft(lehrkraft)

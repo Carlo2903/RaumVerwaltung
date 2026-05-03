@@ -18,6 +18,7 @@ public class LehrkraftTableModel extends Observable {
 
     private static LehrkraftTableModel instance;
     private final LehrkraftDao dao = new LehrkraftDao();
+    @Getter
     private List<Lehrkraft> lehrkraefte = new ArrayList<>();
 
     private final SperrzeitDao sperrzeitDao = new SperrzeitDao();
@@ -46,10 +47,6 @@ public class LehrkraftTableModel extends Observable {
         return !dao.wirdVerwendet(lehrkraft);
     }
 
-    public List<Lehrkraft> getLehrkraefte() {
-        return lehrkraefte;
-    }
-
     public void loadAll() {
         dao.clearCache();
         fachDao.clearCache();     // falls vorhanden
@@ -57,7 +54,7 @@ public class LehrkraftTableModel extends Observable {
         this.lehrkraefte   = dao.findAll();
         this.alleZeitslots = zeitslotDao.findAll();
         setChanged();
-        notifyObservers();
+        notifyObservers("RELOAD");
     }
 
     public void ladeSperrzeiten(Lehrkraft lehrkraft) {
@@ -67,7 +64,7 @@ public class LehrkraftTableModel extends Observable {
             aktuelleSperrzeiten = sperrzeitDao.findeNachLehrkraft(lehrkraft);
         }
         setChanged();
-        notifyObservers();
+        notifyObservers("SPERRZEITEN");
     }
 
     public void speichereSperrzeiten(Lehrkraft lehrkraft,

@@ -2,10 +2,12 @@ package de.fhswf.raumverwaltung.ui.tabpane.vertretung;
 
 import de.fhswf.raumverwaltung.db.entities.*;
 import de.fhswf.raumverwaltung.db.exception.PlanungException;
+import de.fhswf.raumverwaltung.ui.util.VertretungUtil;
 import javafx.collections.*;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -13,7 +15,6 @@ public class VertretungViewModel implements Observer {
 
     private final VertretungTableModel model;
 
-    // ObservableList direkt – kein ObjectProperty<ObservableList>
     @Getter
     private final ObservableList<Lehrkraft> lehrkraefte
             = FXCollections.observableArrayList();
@@ -26,6 +27,11 @@ public class VertretungViewModel implements Observer {
     private final ObservableList<Lehrkraft> verfuegbareLehrer
             = FXCollections.observableArrayList();
 
+    // NEU
+    @Getter
+    private final ObservableList<AbwesenheitUebersicht> abwesenheitUebersicht
+            = FXCollections.observableArrayList();
+
     public VertretungViewModel() {
         this.model = VertretungTableModel.getInstance();
         this.model.addObserver(this);
@@ -33,10 +39,10 @@ public class VertretungViewModel implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        // setAll() feuert ListChangeListener immer zuverlässig
         lehrkraefte.setAll(model.getAlleLehrkraefte());
         betroffeneStunden.setAll(model.getBetroffeneStunden());
         verfuegbareLehrer.setAll(model.getVerfuegbareLehrer());
+        abwesenheitUebersicht.setAll(model.getAbwesenheitUebersicht()); // NEU
     }
 
     public void laden()                        { model.laden(); }
@@ -56,15 +62,26 @@ public class VertretungViewModel implements Observer {
         model.vertretungZuweisen(lehrer, datum);
     }
 
+    // NEU
+    public void abwesenheitAuswaehlen(AbwesenheitUebersicht uebersicht) {
+        model.abwesenheitDirektSetzen(uebersicht.abwesenheit());
+    }
+
     public Stunde getAusgewaehlteStunde() {
         return model.getAusgewaehlteStunde();
     }
-    
-    // Vertretungslehrer für eine Stunde
-    public String getVertretungslehrerName(Stunde stunde) {
-        if (stunde.getId() == null) return "–";
-        Vertretung v = model.getVertretungenProStunde().get(stunde.getId());
-        return v != null ? v.getVertretungsLehrer().getName() : "–";
+
+    public Map<Long, Vertretung> getVertretungenProStunde() {
+        return model.getVertretungenProStunde();
     }
 
+    public String getVertretungslehrerName(Stunde stunde) {
+        return VertretungUtil.getVertretungslehrerName(
+                stunde, model.getVertretungenProStunde()
+        );
+    }
+
+    public void loescheVertretung(Stunde stunde) {
+        model.loescheVertretung(stunde);
+    }
 }

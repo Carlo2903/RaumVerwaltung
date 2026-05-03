@@ -39,6 +39,7 @@ public class LehrkraftTableViewModel implements Observer {
     private final ObservableList<Zeitslot> alleZeitslots
             = FXCollections.observableArrayList();
 
+    @Getter
     private Lehrkraft aktuellerDatensatz = null;
 
     public LehrkraftTableViewModel() {
@@ -48,16 +49,25 @@ public class LehrkraftTableViewModel implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
+        if ("SPERRZEITEN".equals(arg)) {
+            // Nur Sperrzeiten aktualisieren – Table bleibt unberührt
+            javafx.application.Platform.runLater(() ->
+                    sperrzeiten.setAll(model.getAktuelleSperrzeiten())
+            );
+            return;
+        }
+
+        // Voller Reload
         fachDao.clearCache();
         List<LehrkraftTableEntity> tmp = model.getLehrkraefte().stream()
                 .map(LehrkraftTableEntity::new)
                 .collect(Collectors.toList());
-        lehrkraefteProperty.set(FXCollections.observableList(tmp));
-        faecher.setAll(fachDao.findAll());
 
-        // NEU
-        sperrzeiten.setAll(model.getAktuelleSperrzeiten());
-        alleZeitslots.setAll(model.getAlleZeitslots());
+        javafx.application.Platform.runLater(() -> {
+            lehrkraefteProperty.set(FXCollections.observableList(tmp));
+            faecher.setAll(fachDao.findAll());
+            alleZeitslots.setAll(model.getAlleZeitslots());
+        });
     }
 
     public void ladeSperrzeiten(Lehrkraft lehrkraft) {
@@ -144,7 +154,4 @@ public class LehrkraftTableViewModel implements Observer {
         this.aktuellerDatensatz = null;
     }
 
-    public Lehrkraft getAktuellerDatensatz() {
-        return aktuellerDatensatz;
-    }
 }

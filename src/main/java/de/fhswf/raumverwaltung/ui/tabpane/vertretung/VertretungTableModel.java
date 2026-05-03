@@ -18,31 +18,29 @@ public class VertretungTableModel extends Observable {
     private final VertretungsService vertretungsService = VertretungsService.getInstance();
     private final LehrkraftDao       lehrkraftDao       = new LehrkraftDao();
     private final AbwesenheitDao     abwesenheitDao     = new AbwesenheitDao();
+    private final VertretungDao      vertretungDao      = new VertretungDao();
 
-    // Alle Lehrkräfte für die Dropdown
     @Getter
     private List<Lehrkraft> alleLehrkraefte = new ArrayList<>();
 
-    // Aktuell erfasste Abwesenheit
     @Getter
     private Abwesenheit aktuelleAbwesenheit = null;
 
-    // Betroffene Stunden der aktuellen Abwesenheit
     @Getter
     private List<Stunde> betroffeneStunden = new ArrayList<>();
 
-    // Aktuell ausgewählte Stunde (für Kandidaten-Anzeige)
     @Getter
     private Stunde ausgewaehlteStunde = null;
 
-    // Verfügbare Vertretungslehrer für ausgewählte Stunde
     @Getter
     private List<Lehrkraft> verfuegbareLehrer = new ArrayList<>();
 
     @Getter
     private Map<Long, Vertretung> vertretungenProStunde = new HashMap<>();
 
-    private final VertretungDao vertretungDao = new VertretungDao();
+    // NEU
+    @Getter
+    private List<AbwesenheitUebersicht> abwesenheitUebersicht = new ArrayList<>();
 
     private VertretungTableModel() {}
 
@@ -53,14 +51,13 @@ public class VertretungTableModel extends Observable {
         return instance;
     }
 
-    // Initiales Laden
     public void laden() {
         alleLehrkraefte = lehrkraftDao.findAll();
+        ladeUebersicht();
         setChanged();
         notifyObservers();
     }
 
-    // Schritt 1: Abwesenheit erfassen
     public void abwesenheitErfassen(Lehrkraft lehrkraft, LocalDate von,
                                     LocalDate bis, VertretungsGrund grund,
                                     String bemerkung) throws PlanungException {
@@ -70,14 +67,14 @@ public class VertretungTableModel extends Observable {
         betroffeneStunden = vertretungsService.findeBetroffeneStunden(
                 aktuelleAbwesenheit
         );
-        ausgewaehlteStunde  = null;
-        verfuegbareLehrer   = new ArrayList<>();
+        ausgewaehlteStunde = null;
+        verfuegbareLehrer  = new ArrayList<>();
         ladeVertretungen();
+        ladeUebersicht(); // NEU
         setChanged();
         notifyObservers();
     }
 
-    // Schritt 2: Stunde auswählen → Kandidaten laden
     public void stundeAuswaehlen(Stunde stunde, LocalDate abwesenheitVon) {
         ausgewaehlteStunde = stunde;
 
@@ -92,12 +89,10 @@ public class VertretungTableModel extends Observable {
         notifyObservers();
     }
 
-    // Schritt 3: Vertretung zuweisen
     public void vertretungZuweisen(Lehrkraft vertretungsLehrer,
                                    LocalDate abwesenheitVon) throws PlanungException {
         if (ausgewaehlteStunde == null) return;
 
-        // Service kümmert sich um alles – inklusive istVertretung setzen
         LocalDate korrekteDatum = vertretungsService.berechneStundenDatum(
                 ausgewaehlteStunde, abwesenheitVon
         );
@@ -109,22 +104,73 @@ public class VertretungTableModel extends Observable {
                 aktuelleAbwesenheit.getBemerkung()
         );
 
-        betroffeneStunden = vertretungsService.findeBetroffeneStunden(aktuelleAbwesenheit);
+        betroffeneStunden = vertretungsService.findeBetroffeneStunden(
+                aktuelleAbwesenheit
+        );
         ladeVertretungen();
+        ladeUebersicht(); // NEU
         ausgewaehlteStunde = null;
         verfuegbareLehrer  = new ArrayList<>();
         setChanged();
         notifyObservers();
     }
+
+    // NEU: Abwesenheit direkt aus Übersicht auswählen
+    public void abwesenheitDirektSetzen(Abwesenheit abwesenheit) {
+        aktuelleAbwesenheit = abwesenheit;
+        betroffeneStunden   = vertretungsService.findeBetroffeneStunden(abwesenheit);
+        ausgewaehlteStunde  = null;
+        verfuegbareLehrer   = new ArrayList<>();
+        ladeVertretungen();
+        setChanged();
+        notifyObservers();
+    }
+
     private void ladeVertretungen() {
         vertretungenProStunde = new HashMap<>();
         if (betroffeneStunden.isEmpty()) return;
 
-        // Alle Vertretungen für alle betroffenen Stunden laden
         vertretungDao.findeNachStunden(betroffeneStunden)
                 .forEach(v -> vertretungenProStunde.put(v.getStunde().getId(), v));
     }
 
+    // NEU: Übersicht ohne N+1
+    private void ladeUebersicht() {
+        List<Abwesenheit> abwesenheiten =
+                abwesenheitDao.findeAktuelleUndZukuenftige(); // NEU
 
+        List<Vertretung> alleVertretungen = vertretungDao.findeAlleAktiven();
+
+        abwesenheitUebersicht = abwesenheiten.stream()
+                .map(a -> {
+                    List<Stunde> betroffene =
+                            vertretungsService.findeBetroffeneStunden(a);
+
+                    long zugewiesen = alleVertretungen.stream()
+                            .filter(v -> betroffene.stream()
+                                    .anyMatch(s -> s.getId().equals(
+                                            v.getStunde().getId())))
+                            .count();
+
+                    return new AbwesenheitUebersicht(
+                            a,
+                            betroffene.size(),
+                            (int) zugewiesen
+                    );
+                })
+                .toList();
+    }
+
+    public void loescheVertretung(Stunde stunde) {
+        vertretungDao.findeNachStunde(stunde).ifPresent(v -> {
+            vertretungsService.loescheVertretung(v);
+            betroffeneStunden = vertretungsService
+                    .findeBetroffeneStunden(aktuelleAbwesenheit);
+            ladeVertretungen();
+            ladeUebersicht();
+            setChanged();
+            notifyObservers();
+        });
+    }
 
 }
