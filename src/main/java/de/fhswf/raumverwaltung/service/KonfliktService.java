@@ -7,8 +7,23 @@ import de.fhswf.raumverwaltung.db.exception.PlanungException;
 import java.util.List;
 
 public class KonfliktService {
-    private final StundeDao stundeDao = new StundeDao();
-    private final SperrzeitDao sperrzeitDao = new SperrzeitDao();
+    private final StundeDao stundeDao;
+    private final SperrzeitDao sperrzeitDao;
+
+    /** Produktions-Konstruktor: erzeugt DAOs selbst. */
+    public KonfliktService() {
+        this.stundeDao    = new StundeDao();
+        this.sperrzeitDao = new SperrzeitDao();
+    }
+
+    /**
+     * Test-Konstruktor: DAOs werden von außen übergeben (Dependency Injection).
+     * Package-private – nur für Unit-Tests im selben Paket sichtbar.
+     */
+    KonfliktService(StundeDao stundeDao, SperrzeitDao sperrzeitDao) {
+        this.stundeDao    = stundeDao;
+        this.sperrzeitDao = sperrzeitDao;
+    }
 
 
     public void validiereStunde(Stunde neueStunde) throws PlanungException {
