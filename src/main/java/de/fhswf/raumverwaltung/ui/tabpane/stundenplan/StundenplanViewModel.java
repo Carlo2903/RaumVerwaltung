@@ -112,4 +112,13 @@ public class StundenplanViewModel implements Observer, StundenplanViewModelInter
         if (lehrkraft == null) return 0;
         return model.getLehrkraftStunden().getOrDefault(lehrkraft.getId(), 0);
     }
+
+    /**
+     * Öffnet den Bearbeiten-Dialog für eine Stunde (Admin-Implementierung).
+     * Wird von der View über das Interface aufgerufen – kein instanceof-Cast nötig.
+     */
+    @Override
+    public void zeigeBearbeitenDialog(Stunde stunde, Wochentag tag, int stundenNummer) {
+        StundeBearbeitenDialog.zeige(this, stunde, tag, stundenNummer);
+    }
 }

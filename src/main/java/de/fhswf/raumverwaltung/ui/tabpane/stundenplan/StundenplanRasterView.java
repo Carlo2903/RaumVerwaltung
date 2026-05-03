@@ -301,10 +301,7 @@ public class StundenplanRasterView extends BorderPane {
                             .showAndWait();
                     return;
                 }
-                // Nur Admin hat StundenplanViewModel mit zeige()
-                if (viewModel instanceof StundenplanViewModel svm) {
-                    StundeBearbeitenDialog.zeige(svm, null, tag, stundeNummer);
-                }
+                viewModel.zeigeBearbeitenDialog(null, tag, stundeNummer);
             });
         }
 
@@ -425,13 +422,11 @@ public class StundenplanRasterView extends BorderPane {
                     zelle.setStyle(basisStyle + " -fx-cursor: hand;")
             );
             zelle.setOnMouseClicked(e -> {
-                if (viewModel instanceof StundenplanViewModel svm) {
-                    StundeBearbeitenDialog.zeige(
-                            svm, stunde,
-                            stunde.getZeitslot().getWochentag(),
-                            stunde.getZeitslot().getStundenNummer()
-                    );
-                }
+                viewModel.zeigeBearbeitenDialog(
+                        stunde,
+                        stunde.getZeitslot().getWochentag(),
+                        stunde.getZeitslot().getStundenNummer()
+                );
             });
         }
 

@@ -72,4 +72,13 @@ public class LehrerStundenplanViewModel implements Observer, StundenplanViewMode
         if (lehrkraft == null) return 0;
         return model.getLehrkraftStunden().getOrDefault(lehrkraft.getId(), 0);
     }
+
+    /**
+     * Read-Only-Sicht: Lehrer darf den Stundenplan nicht bearbeiten.
+     * Leere Implementierung – kein Dialog wird geöffnet.
+     */
+    @Override
+    public void zeigeBearbeitenDialog(Stunde stunde, Wochentag tag, int stundenNummer) {
+        // absichtlich leer – Lehrersicht ist schreibgeschützt
+    }
 }

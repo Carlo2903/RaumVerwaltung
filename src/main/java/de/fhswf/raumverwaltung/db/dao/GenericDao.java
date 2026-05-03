@@ -1,12 +1,10 @@
 package de.fhswf.raumverwaltung.db.dao;
 
 import de.fhswf.raumverwaltung.db.DatabaseConnection;
-import de.fhswf.raumverwaltung.db.entities.Benutzer;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
-import java.util.Optional;
 
 public abstract class GenericDao<T> implements Dao<T> {
     private final Class<T> persistentClass;
@@ -82,13 +80,4 @@ public abstract class GenericDao<T> implements Dao<T> {
                 .getResultList();
     }
 
-    public Optional<Benutzer> findeNachBenutzername(String benutzername) {
-        return entityManager
-                .createQuery(
-                        "SELECT b FROM Benutzer b WHERE b.benutzername = :name",
-                        Benutzer.class)
-                .setParameter("name", benutzername)
-                .getResultStream()
-                .findFirst();
-    }
 }

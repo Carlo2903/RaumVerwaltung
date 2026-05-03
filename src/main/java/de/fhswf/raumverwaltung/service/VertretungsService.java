@@ -93,11 +93,7 @@ public class VertretungsService {
     private boolean hatSollstundenErreicht(Lehrkraft lehrkraft) {
         if (lehrkraft.getSollStunden() <= 0) return false;
 
-        long aktuelleStunden = stundeDao.findAll().stream()
-                .filter(s -> s.getLehrkraft() != null &&
-                        s.getLehrkraft().getId().equals(lehrkraft.getId()))
-                .count();
-
+        long aktuelleStunden = stundeDao.zaehleBelegtStunden(lehrkraft);
         return aktuelleStunden >= lehrkraft.getSollStunden();
     }
     // Schritt 4: Vertretung zuweisen

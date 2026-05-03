@@ -78,6 +78,19 @@ public class StundeDao extends GenericDao<Stunde> {
     }
 
     /**
+     * Zählt die belegten Wochenstunden einer Lehrkraft direkt in der Datenbank.
+     * Effizienter als findAll().stream().filter().count(), da keine Objekte geladen werden.
+     */
+    public long zaehleBelegtStunden(Lehrkraft lehrkraft) {
+        return entityManager
+                .createQuery(
+                        "SELECT COUNT(s) FROM Stunde s WHERE s.lehrkraft = :lk",
+                        Long.class)
+                .setParameter("lk", lehrkraft)
+                .getSingleResult();
+    }
+
+    /**
      * Löscht eine Stunde inkl. aller zugehörigen Vertretungen in einer Transaktion.
      * Verwendet JPQL-Bulk-DELETE, um Konflikte mit Hibernates orphanRemoval
      * auf Stundenplan.stunden zu umgehen.

@@ -16,9 +16,23 @@ public class LoginView extends StackPane {
     private final Label             fehlerLabel       = new Label();
 
     public LoginView() {
-        this.viewModel = new LoginViewModel(this);
+        this.viewModel = new LoginViewModel();
         this.setStyle("-fx-background-color: #f0f2f5;");
         this.getChildren().add(buildCard());
+
+        // Reaktiv auf Fehlermeldungen aus dem ViewModel reagieren (MVVM-konform)
+        viewModel.getFehlerProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.isBlank()) {
+                fehlerLabel.setText(newVal);
+                fehlerLabel.setVisible(true);
+                fehlerLabel.setManaged(true);
+                passwortField.clear();
+                passwortField.requestFocus();
+            } else {
+                fehlerLabel.setVisible(false);
+                fehlerLabel.setManaged(false);
+            }
+        });
     }
 
     // ---------------------------------------------------------------
@@ -91,13 +105,5 @@ public class LoginView extends StackPane {
                 benutzernameField.getText().trim(),
                 passwortField.getText()
         );
-    }
-
-    public void zeigeFehlermeldung() {
-        fehlerLabel.setText("Benutzername oder Passwort ist falsch.");
-        fehlerLabel.setVisible(true);
-        fehlerLabel.setManaged(true);
-        passwortField.clear();
-        passwortField.requestFocus();
     }
 }
