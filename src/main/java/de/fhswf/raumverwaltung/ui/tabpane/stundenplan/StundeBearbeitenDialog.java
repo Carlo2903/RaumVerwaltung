@@ -45,13 +45,13 @@ public class StundeBearbeitenDialog {
         // ---------------------------------------------------------------
 
 
-        ComboBox<Fach>      fachBox   = new ComboBox<>();
+        ComboBox<Fach> fachBox = new ComboBox<>();
 
         ComboBox<Lehrkraft> lehrerBox = new ComboBox<>();
 
-        ComboBox<Raum>      raumBox   = new ComboBox<>();
+        ComboBox<Raum> raumBox = new ComboBox<>();
 
-        ComboBox<Klasse>    klasseBox = new ComboBox<>();
+        ComboBox<Klasse> klasseBox = new ComboBox<>();
 
 
         // Converter – saubere Anzeige statt toString()
@@ -166,29 +166,35 @@ public class StundeBearbeitenDialog {
         klasseBox.setMaxWidth(Double.MAX_VALUE);
 
 
-        form.add(new Label("Fach:"),      0, 0); form.add(fachBox,      1, 0);
+        form.add(new Label("Fach:"), 0, 0);
+        form.add(fachBox, 1, 0);
 
-        form.add(new Label("Lehrkraft:"), 0, 1); form.add(lehrerBox,    1, 1);
+        form.add(new Label("Lehrkraft:"), 0, 1);
+        form.add(lehrerBox, 1, 1);
 
-        form.add(new Label("Raum:"),      0, 2); form.add(raumBox,      1, 2);
+        form.add(new Label("Raum:"), 0, 2);
+        form.add(raumBox, 1, 2);
 
-        form.add(new Label("Klasse:"),    0, 3); form.add(klasseBox,    1, 3);
+        form.add(new Label("Klasse:"), 0, 3);
+        form.add(klasseBox, 1, 3);
 
-        form.add(konfliktLabel,           0, 4, 2, 1);
+        form.add(konfliktLabel, 0, 4, 2, 1);
 
 
-        GridPane.setHgrow(fachBox,   Priority.ALWAYS);
+        GridPane.setHgrow(fachBox, Priority.ALWAYS);
 
         GridPane.setHgrow(lehrerBox, Priority.ALWAYS);
 
-        GridPane.setHgrow(raumBox,   Priority.ALWAYS);
+        GridPane.setHgrow(raumBox, Priority.ALWAYS);
 
         GridPane.setHgrow(klasseBox, Priority.ALWAYS);
 
 
         dialog.getDialogPane().setContent(form);
 
-        dialog.getDialogPane().setPrefWidth(400);
+
+        dialog.setResizable(true);
+        dialog.getDialogPane().setPrefSize(550, 420);
 
 
         // ---------------------------------------------------------------
@@ -213,15 +219,34 @@ public class StundeBearbeitenDialog {
         // Löschen-Button nur bei bestehender Stunde
 
         if (vorhandeneStunde != null) {
-            ButtonType btnLoeschen = new ButtonType("Löschen",
-                    ButtonBar.ButtonData.LEFT);
+
+            // ── Ausfall markieren / aufheben ──────────────────────────────
+            boolean istAusfallAktuell = vorhandeneStunde.isIstAusfall();
+            String ausfallLabel = istAusfallAktuell ? "↩ Ausfall aufheben" : "✕ Als Ausfall markieren";
+
+            ButtonType btnAusfall = new ButtonType(ausfallLabel, ButtonBar.ButtonData.OTHER);
+            dialog.getDialogPane().getButtonTypes().add(btnAusfall);
+
+            Button ausfallBtn = (Button) dialog.getDialogPane().lookupButton(btnAusfall);
+            ausfallBtn.setStyle(istAusfallAktuell ? "-fx-background-color: #bf8700; -fx-text-fill: white;" : "-fx-background-color: #e36209; -fx-text-fill: white;");
+
+            // View delegiert an ViewModel – keine Logik hier
+            ausfallBtn.setOnAction(e -> {
+                if (istAusfallAktuell) {
+                    viewModel.ausfallAufheben(vorhandeneStunde);
+                } else {
+                    viewModel.stundeAlsAusfallMarkieren(vorhandeneStunde);
+                }
+                dialog.close();
+            });
+
+            // ── Stunde löschen ────────────────────────────────────────────
+
+            ButtonType btnLoeschen = new ButtonType("Löschen", ButtonBar.ButtonData.LEFT);
             dialog.getDialogPane().getButtonTypes().add(btnLoeschen);
 
-            Button loeschenBtn = (Button) dialog.getDialogPane()
-                    .lookupButton(btnLoeschen);
-            loeschenBtn.setStyle(
-                    "-fx-background-color: #cf222e; -fx-text-fill: white;"
-            );
+            Button loeschenBtn = (Button) dialog.getDialogPane().lookupButton(btnLoeschen);
+            loeschenBtn.setStyle("-fx-background-color: #cf222e; -fx-text-fill: white;");
 
             loeschenBtn.setOnAction(e -> {
                 // NEU: Prüfen ob Vertretung vorhanden
@@ -229,19 +254,14 @@ public class StundeBearbeitenDialog {
 
                 if (hatVertretung) {
                     // Warnung anzeigen – Benutzer muss bestätigen
-                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                            "Diese Stunde hat eine zugewiesene Vertretung. " +
-                                    "Beim Löschen wird die Vertretung ebenfalls entfernt. " +
-                                    "Trotzdem löschen?");
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Diese Stunde hat eine zugewiesene Vertretung. " + "Beim Löschen wird die Vertretung ebenfalls entfernt. " + "Trotzdem löschen?");
                     confirm.showAndWait().ifPresent(btn -> {
                         if (btn == ButtonType.OK) {
                             try {
                                 viewModel.stundeLoeschen(vorhandeneStunde);
                                 dialog.close();
                             } catch (Exception ex) {
-                                new Alert(Alert.AlertType.ERROR,
-                                        "Fehler beim Löschen: " + ex.getMessage())
-                                        .showAndWait();
+                                new Alert(Alert.AlertType.ERROR, "Fehler beim Löschen: " + ex.getMessage()).showAndWait();
                             }
                         }
                     });
@@ -251,9 +271,7 @@ public class StundeBearbeitenDialog {
                         viewModel.stundeLoeschen(vorhandeneStunde);
                         dialog.close();
                     } catch (Exception ex) {
-                        new Alert(Alert.AlertType.ERROR,
-                                "Fehler beim Löschen: " + ex.getMessage())
-                                .showAndWait();
+                        new Alert(Alert.AlertType.ERROR, "Fehler beim Löschen: " + ex.getMessage()).showAndWait();
                     }
                 }
             });
@@ -400,8 +418,6 @@ public class StundeBearbeitenDialog {
         dialog.showAndWait();
 
     }
-
-
 
 
     // ---------------------------------------------------------------

@@ -15,7 +15,7 @@ import javafx.stage.Stage;
 public class MainApp extends Application {
 
 
-    public static Stage     primaryStage;
+    public static Stage primaryStage;
     private static MainFrame mainFrame;
 
     @Override
@@ -23,10 +23,12 @@ public class MainApp extends Application {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
         primaryStage = stage;
         mainFrame    = new MainFrame();
+
         erstelleAdmin();
         erstelleStandardSchuljahr();
         erstelleZeitslots();
         erstelleBenutzer();
+
         Scene scene = new Scene(mainFrame, 1200, 800);
 
         stage.setMinWidth(900);

@@ -66,6 +66,26 @@ public class StundenplanViewModel implements Observer, StundenplanViewModelInter
 
     public void stundeLoeschen(Stunde stunde)  { model.stundeLoeschen(stunde); }
 
+    /**
+     * Markiert eine bestehende Stunde als Ausfall.
+     * Keine Konfliktprüfung nötig – die Stunde existiert bereits im Plan.
+     * Das {@code geaendert}-Flag wird gesetzt für das Änderungsprotokoll.
+     */
+    public void stundeAlsAusfallMarkieren(Stunde stunde) {
+        stunde.setIstAusfall(true);
+        stunde.setGeaendert(true);
+        model.stundeSetzen(stunde);
+    }
+
+    /**
+     * Hebt den Ausfall einer Stunde wieder auf (Stunde findet statt).
+     */
+    public void ausfallAufheben(Stunde stunde) {
+        stunde.setIstAusfall(false);
+        stunde.setGeaendert(true);
+        model.stundeSetzen(stunde);
+    }
+
     public Stundenplan getAktuellerPlan()      { return model.getAktuellerPlan(); }
     public Klasse getAktuelleKlasse()          { return model.getAktuelleKlasse(); }
 
