@@ -173,4 +173,25 @@ public class VertretungTableModel extends Observable {
         });
     }
 
+    /**
+     * Löscht eine Abwesenheit vollständig (inkl. aller Vertretungen).
+     * Setzt den Zustand zurück und aktualisiert die Übersicht.
+     */
+    public void abwesenheitLoeschen(Abwesenheit abwesenheit) {
+        vertretungsService.loescheAbwesenheitKomplett(abwesenheit);
+
+        // Zustand zurücksetzen falls die gelöschte Abwesenheit aktiv war
+        if (abwesenheit.equals(aktuelleAbwesenheit)) {
+            aktuelleAbwesenheit = null;
+            betroffeneStunden   = new ArrayList<>();
+            ausgewaehlteStunde  = null;
+            verfuegbareLehrer   = new ArrayList<>();
+            vertretungenProStunde = new HashMap<>();
+        }
+
+        ladeUebersicht();
+        setChanged();
+        notifyObservers();
+    }
+
 }

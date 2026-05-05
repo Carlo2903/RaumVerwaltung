@@ -84,4 +84,12 @@ public class VertretungViewModel implements Observer {
     public void loescheVertretung(Stunde stunde) {
         model.loescheVertretung(stunde);
     }
+
+    /**
+     * Löscht eine Abwesenheit komplett inkl. aller Vertretungen.
+     * Delegation ans Model – keine Logik hier.
+     */
+    public void abwesenheitLoeschen(Abwesenheit abwesenheit) {
+        model.abwesenheitLoeschen(abwesenheit);
+    }
 }

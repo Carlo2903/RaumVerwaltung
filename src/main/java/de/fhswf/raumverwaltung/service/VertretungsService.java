@@ -134,7 +134,23 @@ public class VertretungsService {
         vertretungDao.loescheVertretungMitStundenReset(vertretung);
     }
 
+    /**
+     * Löscht eine Abwesenheit vollständig inkl. aller zugehörigen Vertretungen.
+     * Ablauf: erst alle Vertretungen (mit Stunden-Reset), dann die Abwesenheit selbst.
+     */
+    public void loescheAbwesenheitKomplett(Abwesenheit abwesenheit) {
+        // 1. Alle betroffenen Stunden ermitteln
+        List<Stunde> betroffene = findeBetroffeneStunden(abwesenheit);
 
+        // 2. Jede Vertretung löschen und Stunde zurücksetzen
+        if (!betroffene.isEmpty()) {
+            vertretungDao.findeNachStunden(betroffene)
+                    .forEach(vertretungDao::loescheVertretungMitStundenReset);
+        }
+
+        // 3. Abwesenheit löschen
+        abwesenheitDao.remove(abwesenheit);
+    }
 
     // Hilfsmethode: Wochentage zwischen zwei Daten berechnen
     private List<Wochentag> berechneWochentage(LocalDate von, LocalDate bis) {

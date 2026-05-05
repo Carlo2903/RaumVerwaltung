@@ -127,6 +127,51 @@ public class VertretungView extends VBox {
 
         table.getColumns().addAll(colLehrer, colZeitraum, colGrund, colStatus);
 
+        // Löschen-Spalte – Abwesenheit komplett entfernen
+        TableColumn<AbwesenheitUebersicht, Void> colLoeschen = new TableColumn<>("");
+        colLoeschen.setPrefWidth(100);
+        colLoeschen.setCellFactory(col -> new TableCell<>() {
+            private final Button btnLoeschen = new Button("🗑 Löschen");
+
+            {
+                btnLoeschen.setStyle(
+                        "-fx-background-color: #cf222e;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-background-radius: 6;" +
+                        "-fx-font-size: 11;"
+                );
+                btnLoeschen.setOnAction(e -> {
+                    AbwesenheitUebersicht row =
+                            getTableView().getItems().get(getIndex());
+
+                    // Bestätigung – kein versehentliches Löschen
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Abwesenheit von \"" +
+                            row.abwesenheit().getLehrkraft().getName() +
+                            "\" (" + row.abwesenheit().getVon() +
+                            " – " + row.abwesenheit().getBis() + ")" +
+                            " komplett löschen?\n\n" +
+                            "Alle zugehörigen Vertretungen werden ebenfalls entfernt."
+                    );
+                    confirm.setTitle("Abwesenheit löschen");
+                    confirm.showAndWait().ifPresent(btn -> {
+                        if (btn == ButtonType.OK) {
+                            // View ruft nur ViewModel auf – keine Logik hier
+                            viewModel.abwesenheitLoeschen(row.abwesenheit());
+                        }
+                    });
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : btnLoeschen);
+            }
+        });
+
+        table.getColumns().add(colLoeschen);
+
         // Klick → Abwesenheit direkt laden
         table.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
