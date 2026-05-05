@@ -9,13 +9,28 @@ public class LehrkraftDao extends GenericDao<Lehrkraft> {
     public boolean wirdVerwendet(Lehrkraft lehrkraft) {
         entityManager.clear();
 
-        Long anzahl = entityManager
+        Long stunden = entityManager
                 .createQuery(
                         "SELECT COUNT(s) FROM Stunde s WHERE s.lehrkraft = :lehrkraft",
                         Long.class)
                 .setParameter("lehrkraft", lehrkraft)
                 .getSingleResult();
-        return anzahl > 0;
+
+        Long abwesenheiten = entityManager
+                .createQuery(
+                        "SELECT COUNT(a) FROM Abwesenheit a WHERE a.lehrkraft = :lehrkraft",
+                        Long.class)
+                .setParameter("lehrkraft", lehrkraft)
+                .getSingleResult();
+
+        Long vertretungen = entityManager
+                .createQuery(
+                        "SELECT COUNT(v) FROM Vertretung v WHERE v.vertretungsLehrer = :lehrkraft",
+                        Long.class)
+                .setParameter("lehrkraft", lehrkraft)
+                .getSingleResult();
+
+        return stunden > 0 || abwesenheiten > 0 || vertretungen > 0;
     }
 
     @Override

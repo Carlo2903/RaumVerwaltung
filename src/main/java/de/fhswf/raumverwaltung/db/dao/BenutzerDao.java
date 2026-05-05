@@ -35,4 +35,18 @@ public class BenutzerDao extends GenericDao<Benutzer> {
                 .getResultStream()
                 .findFirst();
     }
+
+    /**
+     * Sucht den automatisch erstellten Login-Account einer bestimmten Klasse.
+     */
+    public Optional<de.fhswf.raumverwaltung.db.entities.SchuelerBenutzer> findeSchuelerBenutzerNachKlasse(
+            de.fhswf.raumverwaltung.db.entities.Klasse klasse) {
+        return entityManager
+                .createQuery(
+                        "SELECT sb FROM SchuelerBenutzer sb WHERE sb.klasse = :klasse",
+                        de.fhswf.raumverwaltung.db.entities.SchuelerBenutzer.class)
+                .setParameter("klasse", klasse)
+                .getResultStream()
+                .findFirst();
+    }
 }

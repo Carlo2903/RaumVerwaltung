@@ -93,7 +93,7 @@ public class KlasseTableViewModel implements Observer {
             fehlerProperty.set(
                     "Klasse '" + aktuellerDatensatz.getBezeichnung() +
                             "' kann nicht gelöscht werden, " +
-                            "da sie noch Stunden zugewiesen ist."
+                            "da sie noch Stunden oder Schülern zugewiesen ist."
             );
             return;
         }
@@ -104,7 +104,7 @@ public class KlasseTableViewModel implements Observer {
         } catch (jakarta.persistence.PersistenceException e) {
             fehlerProperty.set(
                     "Klasse kann nicht gelöscht werden, " +
-                            "da sie noch Stunden zugewiesen ist."
+                            "da sie noch Stunden oder Schülern zugewiesen ist."
             );
         }
     }

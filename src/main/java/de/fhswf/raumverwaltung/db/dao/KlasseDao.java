@@ -21,12 +21,20 @@ public class KlasseDao extends GenericDao<Klasse> {
     public boolean wirdVerwendet(Klasse klasse) {
         entityManager.clear();
 
-        Long anzahl = entityManager
+        Long stunden = entityManager
                 .createQuery(
                         "SELECT COUNT(s) FROM Stunde s WHERE s.klasse = :klasse",
                         Long.class)
                 .setParameter("klasse", klasse)
                 .getSingleResult();
-        return anzahl > 0;
+
+        Long schueler = entityManager
+                .createQuery(
+                        "SELECT COUNT(s) FROM Schueler s WHERE s.klasse = :klasse",
+                        Long.class)
+                .setParameter("klasse", klasse)
+                .getSingleResult();
+
+        return stunden > 0 || schueler > 0;
     }
 }

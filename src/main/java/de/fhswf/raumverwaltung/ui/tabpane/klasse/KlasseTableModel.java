@@ -48,6 +48,12 @@ public class KlasseTableModel extends Observable {
     }
 
     public void loeschen(Klasse klasse) {
+        // 1. Zuerst den Login-Account der Klasse entfernen
+        de.fhswf.raumverwaltung.db.dao.BenutzerDao benutzerDao = new de.fhswf.raumverwaltung.db.dao.BenutzerDao();
+        benutzerDao.findeSchuelerBenutzerNachKlasse(klasse)
+                .ifPresent(benutzerDao::remove);
+
+        // 2. Dann die Klasse löschen
         dao.remove(klasse);
         loadAll();
     }

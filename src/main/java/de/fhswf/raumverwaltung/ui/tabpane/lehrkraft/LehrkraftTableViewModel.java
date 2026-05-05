@@ -130,7 +130,7 @@ public class LehrkraftTableViewModel implements Observer {
             fehlerProperty.set(
                     "Lehrkraft '" + aktuellerDatensatz.getName() +
                             "' kann nicht gelöscht werden, " +
-                            "da sie noch Stunden zugewiesen ist."
+                            "da sie noch Stunden, Abwesenheiten oder Vertretungen zugewiesen ist."
             );
             return;
         }
@@ -141,7 +141,7 @@ public class LehrkraftTableViewModel implements Observer {
         } catch (jakarta.persistence.PersistenceException e) {
             fehlerProperty.set(
                     "Lehrkraft kann nicht gelöscht werden, " +
-                            "da sie noch Stunden zugewiesen ist."
+                            "da sie noch in anderen Daten (Stunden, Abwesenheiten, Vertretungen) verwendet wird."
             );
         }
     }

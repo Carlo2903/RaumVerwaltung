@@ -83,6 +83,26 @@ public class LehrkraftTableModel extends Observable {
     }
 
     public void loeschen(Lehrkraft lehrkraft) {
+        // 1. Sperrzeiten löschen
+        List<Sperrzeit> sperrzeiten = sperrzeitDao.findeNachLehrkraft(lehrkraft);
+        sperrzeiten.forEach(sperrzeitDao::remove);
+
+        // 2. Klassenlehrer-Zuweisungen aufheben
+        de.fhswf.raumverwaltung.db.dao.KlasseDao klasseDao = new de.fhswf.raumverwaltung.db.dao.KlasseDao();
+        List<de.fhswf.raumverwaltung.db.entities.Klasse> klassen = klasseDao.findAll();
+        for (de.fhswf.raumverwaltung.db.entities.Klasse k : klassen) {
+            if (k.getKlassenLehrer() != null && k.getKlassenLehrer().getId().equals(lehrkraft.getId())) {
+                k.setKlassenLehrer(null);
+                klasseDao.merge(k);
+            }
+        }
+
+        // 3. Benutzer-Account löschen
+        de.fhswf.raumverwaltung.db.dao.BenutzerDao benutzerDao = new de.fhswf.raumverwaltung.db.dao.BenutzerDao();
+        benutzerDao.findeNachBenutzername(lehrkraft.getKuerzel().toLowerCase())
+                .ifPresent(benutzerDao::remove);
+
+        // 4. Lehrkraft löschen
         dao.remove(lehrkraft);
         loadAll();
     }

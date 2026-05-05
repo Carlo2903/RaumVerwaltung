@@ -112,13 +112,26 @@ public class LehrkraftTab extends MyTab implements Reloadable {
         });
 
         btnLoeschen.setOnAction(e -> {
-            viewModel.loeschen();
-            String fehler = viewModel.getFehlerProperty().get();
-            if (fehler != null) {
-                new Alert(Alert.AlertType.WARNING, fehler).showAndWait();
-            } else {
-                clearForm();
+            if (viewModel.getAktuellerDatensatz() == null) {
+                new Alert(Alert.AlertType.WARNING, "Bitte wählen Sie einen Datensatz zum Löschen aus.").showAndWait();
+                return;
             }
+
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Möchten Sie diesen Datensatz wirklich löschen?");
+            confirm.setTitle("Löschen bestätigen");
+            confirm.setHeaderText(null);
+
+            confirm.showAndWait().ifPresent(btn -> {
+                if (btn == ButtonType.OK) {
+                    viewModel.loeschen();
+                    String fehler = viewModel.getFehlerProperty().get();
+                    if (fehler != null) {
+                        new Alert(Alert.AlertType.WARNING, fehler).showAndWait();
+                    } else {
+                        clearForm();
+                    }
+                }
+            });
         });
 
         btnSperrzeiten.setOnAction(e -> zeigeSperrzeitDialog());
