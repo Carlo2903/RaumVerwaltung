@@ -11,6 +11,7 @@ import de.fhswf.raumverwaltung.ui.tabpane.MyTabPane;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
 
 public class MainApp extends Application {
 
@@ -36,6 +37,11 @@ public class MainApp extends Application {
 
 
         stage.setTitle("Schul-Planer Pro 2026");
+        try {
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo2.png")));
+        } catch (Exception e) {
+            System.err.println("Konnte App-Icon nicht laden.");
+        }
         stage.setScene(scene);
         stage.show();
     }

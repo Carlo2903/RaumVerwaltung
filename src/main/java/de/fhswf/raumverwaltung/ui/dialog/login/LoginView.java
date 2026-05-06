@@ -4,6 +4,8 @@ import de.fhswf.raumverwaltung.db.entities.Benutzerrolle;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -52,9 +54,16 @@ public class LoginView extends StackPane {
         );
 
         // Avatar
-        Circle avatar = new Circle(48);
-        avatar.setFill(Color.web("#3d5a80"));
-
+        ImageView avatar = new ImageView();
+        try {
+            Image logo = new Image(getClass().getResourceAsStream("/logo2.png"));
+            avatar.setImage(logo);
+            avatar.setFitWidth(96);
+            avatar.setFitHeight(96);
+            avatar.setPreserveRatio(true);
+        } catch (Exception e) {
+            System.err.println("Konnte logo2.png nicht laden.");
+        }
         // Felder
         benutzernameField.setPromptText("Benutzername");
         benutzernameField.setPrefHeight(44);
