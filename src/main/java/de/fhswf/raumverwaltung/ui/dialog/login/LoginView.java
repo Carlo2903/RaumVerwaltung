@@ -106,4 +106,11 @@ public class LoginView extends StackPane {
                 passwortField.getText()
         );
     }
+
+    public void clearInputs() {
+        benutzernameField.clear();
+        passwortField.clear();
+        fehlerLabel.setVisible(false);
+        fehlerLabel.setManaged(false);
+    }
 }

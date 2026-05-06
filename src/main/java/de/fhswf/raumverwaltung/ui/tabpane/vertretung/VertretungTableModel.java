@@ -155,7 +155,7 @@ public class VertretungTableModel extends Observable {
                     return new AbwesenheitUebersicht(
                             a,
                             betroffene.size(),
-                            (int) zugewiesen
+                            (int) zugewiesen // zugewiesen beinhaltet nun auch Ausfälle, da beides als Vertretung-Eintrag existiert
                     );
                 })
                 .toList();
@@ -164,13 +164,40 @@ public class VertretungTableModel extends Observable {
     public void loescheVertretung(Stunde stunde) {
         vertretungDao.findeNachStunde(stunde).ifPresent(v -> {
             vertretungsService.loescheVertretung(v);
+            refreshNachAenderung();
+        });
+    }
+
+    public void setzeAusfall(Stunde stunde, boolean ausfall) {
+        if (ausfall) {
+            LocalDate korrekteDatum = vertretungsService.berechneStundenDatum(
+                    stunde, aktuelleAbwesenheit.getVon()
+            );
+            try {
+                vertretungsService.weiseAusfallZu(
+                        stunde, korrekteDatum, 
+                        aktuelleAbwesenheit.getGrund(), 
+                        aktuelleAbwesenheit.getBemerkung()
+                );
+                refreshNachAenderung();
+            } catch (PlanungException e) {
+                // Ignore for now
+            }
+        } else {
+            // Ausfall aufheben == Vertretung löschen
+            loescheVertretung(stunde);
+        }
+    }
+
+    private void refreshNachAenderung() {
+        if (aktuelleAbwesenheit != null) {
             betroffeneStunden = vertretungsService
                     .findeBetroffeneStunden(aktuelleAbwesenheit);
-            ladeVertretungen();
-            ladeUebersicht();
-            setChanged();
-            notifyObservers();
-        });
+        }
+        ladeVertretungen();
+        ladeUebersicht();
+        setChanged();
+        notifyObservers();
     }
 
     /**
@@ -181,7 +208,7 @@ public class VertretungTableModel extends Observable {
         vertretungsService.loescheAbwesenheitKomplett(abwesenheit);
 
         // Zustand zurücksetzen falls die gelöschte Abwesenheit aktiv war
-        if (abwesenheit.equals(aktuelleAbwesenheit)) {
+        if (aktuelleAbwesenheit != null && abwesenheit.getId().equals(aktuelleAbwesenheit.getId())) {
             aktuelleAbwesenheit = null;
             betroffeneStunden   = new ArrayList<>();
             ausgewaehlteStunde  = null;

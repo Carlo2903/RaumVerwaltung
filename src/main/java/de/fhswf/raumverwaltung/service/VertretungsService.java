@@ -130,6 +130,25 @@ public class VertretungsService {
         return vertretung;
     }
 
+    public Vertretung weiseAusfallZu(Stunde stunde, LocalDate datum, 
+                                     VertretungsGrund grund, String bemerkung) throws PlanungException {
+        // Ein Ausfall ist technisch eine Vertretung OHNE Vertretungslehrer (null)
+        Vertretung vertretung = Vertretung.builder()
+                .stunde(stunde)
+                .vertretungsLehrer(null)
+                .datum(datum)
+                .grund(grund)
+                .bemerkung(bemerkung)
+                .build();
+
+        vertretungDao.persist(vertretung);
+
+        stunde.setIstAusfall(true); // Aktualisiert das Flag im globalen Raster für die Lehrersicht
+        stundeDao.merge(stunde);
+
+        return vertretung;
+    }
+
     public void loescheVertretung(Vertretung vertretung) {
         vertretungDao.loescheVertretungMitStundenReset(vertretung);
     }

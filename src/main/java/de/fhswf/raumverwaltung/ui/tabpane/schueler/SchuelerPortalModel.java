@@ -103,10 +103,16 @@ public class SchuelerPortalModel extends Observable implements Observer {
         ladeAktuelleWoche();
     }
 
-    public boolean hatVertretungAmDatum(Stunde stunde, LocalDate datum) {
+    public boolean istVertretungAmDatum(Stunde stunde, LocalDate datum) {
         if (stunde == null || stunde.getId() == null) return false;
         Vertretung v = vertretungenProStunde.get(stunde.getId());
-        return v != null && v.getDatum().equals(datum);
+        return v != null && v.getDatum().equals(datum) && v.getVertretungsLehrer() != null;
+    }
+
+    public boolean istAusfallAmDatum(Stunde stunde, LocalDate datum) {
+        if (stunde == null || stunde.getId() == null) return false;
+        Vertretung v = vertretungenProStunde.get(stunde.getId());
+        return v != null && v.getDatum().equals(datum) && v.getVertretungsLehrer() == null;
     }
 
     // ---------------------------------------------------------------

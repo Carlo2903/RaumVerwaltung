@@ -408,7 +408,25 @@ public class StundenplanRasterView extends BorderPane {
         }
 
         if (readOnly) {
-            // Kein Hover, kein Klick – read-only
+            zelle.setOnMouseEntered(e -> zelle.setStyle(
+                    "-fx-background-color: derive(" + farbe + ", -10%);" +
+                            "-fx-background-radius: 6;" +
+                            "-fx-border-color: derive(" + rand + ", -20%);" +
+                            "-fx-border-radius: 6;" +
+                            "-fx-cursor: hand;"
+            ));
+            zelle.setOnMouseExited(e ->
+                    zelle.setStyle(basisStyle + " -fx-cursor: hand;")
+            );
+            zelle.setOnMouseClicked(e -> {
+                de.fhswf.raumverwaltung.ui.tabpane.schueler.StundenDetailDialog.zeige(
+                        stunde,
+                        null,
+                        stunde.isIstVertretung(),
+                        stunde.isIstVertretung() ? viewModel.getVertretungslehrerName(stunde) : null,
+                        stunde.isIstAusfall()
+                );
+            });
         } else {
             // Admin: Hover + Klick zum Bearbeiten
             zelle.setOnMouseEntered(e -> zelle.setStyle(

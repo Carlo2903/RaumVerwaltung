@@ -16,6 +16,7 @@ public class VertretungUtil {
         if (stunde == null || stunde.getId() == null) return "–";
         Vertretung v = vertretungenProStunde.get(stunde.getId());
         if (v == null || !v.getDatum().equals(datum)) return "–";
+        if (v.getVertretungsLehrer() == null) return "–";
         return v.getVertretungsLehrer().getName();
     }
 
@@ -25,6 +26,7 @@ public class VertretungUtil {
             Map<Long, Vertretung> vertretungenProStunde) {
         if (stunde == null || stunde.getId() == null) return "–";
         Vertretung v = vertretungenProStunde.get(stunde.getId());
-        return v != null ? v.getVertretungsLehrer().getName() : "–";
+        if (v == null || v.getVertretungsLehrer() == null) return "–";
+        return v.getVertretungsLehrer().getName();
     }
 }

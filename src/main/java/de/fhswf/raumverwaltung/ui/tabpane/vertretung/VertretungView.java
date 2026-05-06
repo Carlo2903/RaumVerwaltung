@@ -201,7 +201,7 @@ public class VertretungView extends VBox {
     // ---------------------------------------------------------------
 
     private VBox buildSektion1() {
-        Label titel = new Label("① Abwesenheit erfassen");
+        Label titel = new Label("② Abwesenheit erfassen");
         titel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
 
         // Dropdowns befüllen
@@ -242,7 +242,7 @@ public class VertretungView extends VBox {
     // ---------------------------------------------------------------
 
     private VBox buildSektion2() {
-        Label titel = new Label("② Betroffene Stunden");
+        Label titel = new Label("③ Betroffene Stunden");
         titel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
 
         // Spalten
@@ -251,7 +251,7 @@ public class VertretungView extends VBox {
         TableColumn<Stunde, String> colKlasse = new TableColumn<>("Klasse");
         TableColumn<Stunde, String> colFach  = new TableColumn<>("Fach");
         TableColumn<Stunde, String> colStatus = new TableColumn<>("Status");
-        TableColumn<Stunde, Void>   colAktion = new TableColumn<>("Vertretungslehrer");
+        TableColumn<Stunde, Void>   colAktion = new TableColumn<>("Aktion");
 
         // Lambdas – kein PropertyValueFactory
         colNr.setCellValueFactory(data ->
@@ -277,8 +277,13 @@ public class VertretungView extends VBox {
                 )
         );
         colStatus.setCellValueFactory(data -> {
-            String status = data.getValue().isIstVertretung()
-                    ? "✓ Zugewiesen" : "⚠ Offen";
+            Stunde s = data.getValue();
+            Vertretung v = viewModel.getVertretungenProStunde().get(s.getId());
+            boolean isAusfall = (v != null && v.getVertretungsLehrer() == null);
+            boolean isVertretung = (v != null && v.getVertretungsLehrer() != null);
+
+            String status = isVertretung ? "✓ Zugewiesen" :
+                            isAusfall    ? "✕ Ausfall"    : "⚠ Offen";
             return new javafx.beans.property.SimpleStringProperty(status);
         });
 
@@ -292,32 +297,26 @@ public class VertretungView extends VBox {
                     setStyle("");
                 } else {
                     setText(item);
-                    setStyle(item.startsWith("✓")
-                            ? "-fx-text-fill: #1a7f37; -fx-font-weight: bold;"
-                            : "-fx-text-fill: #bf8700; -fx-font-weight: bold;"
+                    setStyle(item.startsWith("✓") ? "-fx-text-fill: #1a7f37; -fx-font-weight: bold;" :
+                             item.startsWith("✕") ? "-fx-text-fill: #cf222e; -fx-font-weight: bold;" :
+                                                    "-fx-text-fill: #bf8700; -fx-font-weight: bold;"
                     );
                 }
             }
         });
 
-        // "Vertretung zuweisen" Button in jeder Zeile
+        // "Vertretung zuweisen" / "Ausfall" Button in jeder Zeile
         colAktion.setCellFactory(col -> new TableCell<>() {
-            private final Button btnZuweisen = new Button("Vertretung zuweisen →");
+            private final Button btnZuweisen = new Button("Vertretung →");
+            private final Button btnAusfall  = new Button("Als Ausfall markieren");
             private final Button btnLoeschen = new Button("✕ Vertretung entfernen");
+            private final Button btnAusfallAufheben = new Button("Ausfall aufheben");
 
             {
-                btnZuweisen.setStyle(
-                        "-fx-background-color: #3d5a80;" +
-                                "-fx-text-fill: white;" +
-                                "-fx-background-radius: 6;" +
-                                "-fx-font-size: 11;"
-                );
-                btnLoeschen.setStyle(
-                        "-fx-background-color: #cf222e;" +
-                                "-fx-text-fill: white;" +
-                                "-fx-background-radius: 6;" +
-                                "-fx-font-size: 11;"
-                );
+                btnZuweisen.setStyle("-fx-background-color: #3d5a80; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-size: 11;");
+                btnAusfall.setStyle("-fx-background-color: transparent; -fx-text-fill: #cf222e; -fx-border-color: #cf222e; -fx-border-radius: 6; -fx-font-size: 11;");
+                btnLoeschen.setStyle("-fx-background-color: #cf222e; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-size: 11;");
+                btnAusfallAufheben.setStyle("-fx-background-color: #cf222e; -fx-text-fill: white; -fx-background-radius: 6; -fx-font-size: 11;");
 
                 btnZuweisen.setOnAction(e -> {
                     Stunde stunde = getTableView().getItems().get(getIndex());
@@ -325,15 +324,22 @@ public class VertretungView extends VBox {
                     viewModel.stundeAuswaehlen(stunde, datum);
                 });
 
+                btnAusfall.setOnAction(e -> {
+                    Stunde stunde = getTableView().getItems().get(getIndex());
+                    viewModel.setzeAusfall(stunde, true);
+                });
+
                 btnLoeschen.setOnAction(e -> {
                     Stunde stunde = getTableView().getItems().get(getIndex());
-                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                            "Vertretung für diese Stunde wirklich entfernen?");
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Vertretung für diese Stunde wirklich entfernen?");
                     confirm.showAndWait().ifPresent(btn -> {
-                        if (btn == ButtonType.OK) {
-                            viewModel.loescheVertretung(stunde);
-                        }
+                        if (btn == ButtonType.OK) viewModel.loescheVertretung(stunde);
                     });
+                });
+                
+                btnAusfallAufheben.setOnAction(e -> {
+                    Stunde stunde = getTableView().getItems().get(getIndex());
+                    viewModel.setzeAusfall(stunde, false);
                 });
             }
 
@@ -345,13 +351,24 @@ public class VertretungView extends VBox {
                     return;
                 }
                 Stunde stunde = getTableView().getItems().get(getIndex());
-                // Vertretung zugewiesen → Löschen-Button, sonst Zuweisen-Button
-                setGraphic(stunde.isIstVertretung() ? btnLoeschen : btnZuweisen);
+                Vertretung v = viewModel.getVertretungenProStunde().get(stunde.getId());
+                boolean isAusfall = (v != null && v.getVertretungsLehrer() == null);
+                boolean isVertretung = (v != null && v.getVertretungsLehrer() != null);
+                
+                if (isVertretung) {
+                    setGraphic(btnLoeschen);
+                } else if (isAusfall) {
+                    setGraphic(btnAusfallAufheben);
+                } else {
+                    HBox box = new HBox(8, btnZuweisen, btnAusfall);
+                    box.setAlignment(Pos.CENTER_LEFT);
+                    setGraphic(box);
+                }
             }
         });
 
         stundenTable.getColumns().addAll(
-                colNr, colZeit, colKlasse, colFach, colAktion, colStatus
+                colNr, colZeit, colKlasse, colFach, colStatus, colAktion
         );
         stundenTable.setPrefHeight(200);
         stundenTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -371,7 +388,7 @@ public class VertretungView extends VBox {
     // ---------------------------------------------------------------
 
     private VBox buildSektion3() {
-        Label titel = new Label("③ Verfügbare Vertretungslehrkräfte");
+        Label titel = new Label("④ Verfügbare Vertretungslehrkräfte");
         titel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
 
         kandidatenPane.setHgap(12);

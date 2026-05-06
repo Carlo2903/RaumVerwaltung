@@ -92,4 +92,8 @@ public class VertretungViewModel implements Observer {
     public void abwesenheitLoeschen(Abwesenheit abwesenheit) {
         model.abwesenheitLoeschen(abwesenheit);
     }
+
+    public void setzeAusfall(Stunde stunde, boolean ausfall) {
+        model.setzeAusfall(stunde, ausfall);
+    }
 }

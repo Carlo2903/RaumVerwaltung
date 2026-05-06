@@ -10,7 +10,8 @@ import java.time.LocalDate;
 public class StundenDetailDialog {
 
     public static void zeige(Stunde stunde, LocalDate datum,
-                             boolean hatVertretung, String vertretungsName) {
+                             boolean hatVertretung, String vertretungsName,
+                             boolean istAusfall) {
 
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle("Stundendetails");
@@ -53,12 +54,12 @@ public class StundenDetailDialog {
                         ? stunde.getKlasse().getBezeichnung() : "–"));
 
         // Status
-        String status = stunde.isIstAusfall()  ? "✕ Ausfall" :
-                hatVertretung          ? "⚠ Vertretung" :
-                        "✓ Regulär";
-        String statusFarbe = stunde.isIstAusfall() ? "#cf222e" :
-                hatVertretung          ? "#bf8700" :
-                        "#1a7f37";
+        String status = istAusfall     ? "✕ Ausfall" :
+                        hatVertretung  ? "⚠ Vertretung" :
+                                         "✓ Regulär";
+        String statusFarbe = istAusfall     ? "#cf222e" :
+                             hatVertretung  ? "#bf8700" :
+                                              "#1a7f37";
 
         Label lblStatus = new Label(status);
         lblStatus.setStyle(

@@ -256,14 +256,15 @@ public class SchuelerPortalView extends BorderPane {
     // ---------------------------------------------------------------
 
     private HBox buildStundenKarte(Stunde stunde, LocalDate datum) {
-        // Vertretung nur wenn Datum übereinstimmt
-        boolean hatVertretung = viewModel.hatVertretungAmDatum(stunde, datum);
+        // Vertretung oder Ausfall nur wenn Datum übereinstimmt
+        boolean hatVertretung = viewModel.istVertretungAmDatum(stunde, datum);
+        boolean istAusfall    = viewModel.istAusfallAmDatum(stunde, datum);
 
         String hintergrund;
         String textFarbe;
         String badge;
 
-        if (stunde.isIstAusfall()) {
+        if (istAusfall) {
             hintergrund = "#c0392b";
             textFarbe   = "white";
             badge       = "✕ Ausfall";
@@ -283,7 +284,7 @@ public class SchuelerPortalView extends BorderPane {
         Label lblZeit = new Label(startzeit + " - " + endzeit);
         lblZeit.setStyle(
                 "-fx-min-width: 100;" +
-                        "-fx-text-fill: " + (stunde.isIstAusfall() || hatVertretung
+                        "-fx-text-fill: " + (istAusfall || hatVertretung
                         ? "white" : "#666") + ";" +
                         "-fx-font-size: 12;"
         );
@@ -318,7 +319,7 @@ public class SchuelerPortalView extends BorderPane {
         Label lblDetails = new Label(lehrerInfo + " " + raumInfo);
         lblDetails.setStyle(
                 "-fx-font-size: 11;" +
-                        "-fx-text-fill: " + (stunde.isIstAusfall() || hatVertretung
+                        "-fx-text-fill: " + (istAusfall || hatVertretung
                         ? "rgba(255,255,255,0.85)" : "#666") + ";"
         );
 
@@ -346,7 +347,7 @@ public class SchuelerPortalView extends BorderPane {
                         "-fx-background-radius: 8;" +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 2);";
 
-        if (!stunde.isIstAusfall() && !hatVertretung) {
+        if (!istAusfall && !hatVertretung) {
             stil +=
                     "-fx-border-color: transparent transparent transparent #1a7f37;" +
                             "-fx-border-width: 0 0 0 4;" +
@@ -356,7 +357,8 @@ public class SchuelerPortalView extends BorderPane {
                 stunde,
                 datum,
                 hatVertretung,
-                viewModel.getVertretungslehrerName(stunde, datum)
+                viewModel.getVertretungslehrerName(stunde, datum),
+                istAusfall
         ));
         karte.setStyle(stil);
         return karte;

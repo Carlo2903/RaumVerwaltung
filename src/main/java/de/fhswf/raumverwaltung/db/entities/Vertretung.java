@@ -29,8 +29,8 @@ public class Vertretung {
     @JoinColumn(name = "stunde_id", nullable = false)
     private Stunde stunde;
 
-    // Die Lehrkraft die die Vertretung übernimmt
+    // Die Lehrkraft die die Vertretung übernimmt (NULL = Ausfall an diesem Datum)
     @ManyToOne
-    @JoinColumn(name = "vertretungslehrer_id", nullable = false)
+    @JoinColumn(name = "vertretungslehrer_id", nullable = true)
     private Lehrkraft vertretungsLehrer;
 }

@@ -80,7 +80,11 @@ public class SchuelerPortalViewModel implements Observer {
         );
     }
 
-    public boolean hatVertretungAmDatum(Stunde stunde, LocalDate datum) {
-        return model.hatVertretungAmDatum(stunde, datum);
+    public boolean istVertretungAmDatum(Stunde stunde, LocalDate datum) {
+        return model.istVertretungAmDatum(stunde, datum);
+    }
+
+    public boolean istAusfallAmDatum(Stunde stunde, LocalDate datum) {
+        return model.istAusfallAmDatum(stunde, datum);
     }
 }
