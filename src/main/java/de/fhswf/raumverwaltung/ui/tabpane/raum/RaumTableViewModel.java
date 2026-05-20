@@ -19,11 +19,9 @@ public class RaumTableViewModel implements Observer {
     private final ObjectProperty<ObservableList<RaumTableEntity>> raeumeProperty
             = new SimpleObjectProperty<>();
 
-    // Fehlermeldung – View beobachtet diese Property
     @Getter
     private final StringProperty fehlerProperty = new SimpleStringProperty();
 
-    // Aktuell bearbeiteter Datensatz – liegt im ViewModel, nicht in der View
     @Getter
     private Raum aktuellerDatensatz = null;
 
@@ -44,10 +42,8 @@ public class RaumTableViewModel implements Observer {
         model.loadAll();
     }
 
-    // View übergibt nur Rohwerte – ViewModel validiert und baut Entity
     public void speichern(String bezeichnung, RaumTyp raumtyp, int kapazitaet) {
         fehlerProperty.set(null);
-        // Validierung
         if (bezeichnung.isBlank()) {
             fehlerProperty.set("Bezeichnung darf nicht leer sein.");
             return;
@@ -100,7 +96,6 @@ public class RaumTableViewModel implements Observer {
         }
     }
 
-    // View meldet Selektion – ViewModel merkt sich den Datensatz
     public void datensatzAuswaehlen(Raum raum) {
         this.aktuellerDatensatz = raum;
     }

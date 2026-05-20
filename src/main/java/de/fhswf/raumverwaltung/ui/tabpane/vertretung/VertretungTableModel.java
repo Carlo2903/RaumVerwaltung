@@ -38,7 +38,6 @@ public class VertretungTableModel extends Observable {
     @Getter
     private Map<Long, Vertretung> vertretungenProStunde = new HashMap<>();
 
-    // NEU
     @Getter
     private List<AbwesenheitUebersicht> abwesenheitUebersicht = new ArrayList<>();
 
@@ -70,7 +69,7 @@ public class VertretungTableModel extends Observable {
         ausgewaehlteStunde = null;
         verfuegbareLehrer  = new ArrayList<>();
         ladeVertretungen();
-        ladeUebersicht(); // NEU
+        ladeUebersicht();
         setChanged();
         notifyObservers();
     }
@@ -108,14 +107,13 @@ public class VertretungTableModel extends Observable {
                 aktuelleAbwesenheit
         );
         ladeVertretungen();
-        ladeUebersicht(); // NEU
+        ladeUebersicht();
         ausgewaehlteStunde = null;
         verfuegbareLehrer  = new ArrayList<>();
         setChanged();
         notifyObservers();
     }
 
-    // NEU: Abwesenheit direkt aus Übersicht auswählen
     public void abwesenheitDirektSetzen(Abwesenheit abwesenheit) {
         aktuelleAbwesenheit = abwesenheit;
         betroffeneStunden   = vertretungsService.findeBetroffeneStunden(abwesenheit);
@@ -134,10 +132,9 @@ public class VertretungTableModel extends Observable {
                 .forEach(v -> vertretungenProStunde.put(v.getStunde().getId(), v));
     }
 
-    // NEU: Übersicht ohne N+1
     private void ladeUebersicht() {
         List<Abwesenheit> abwesenheiten =
-                abwesenheitDao.findeAktuelleUndZukuenftige(); // NEU
+                abwesenheitDao.findeAktuelleUndZukuenftige();
 
         List<Vertretung> alleVertretungen = vertretungDao.findeAlleAktiven();
 
@@ -181,10 +178,9 @@ public class VertretungTableModel extends Observable {
                 );
                 refreshNachAenderung();
             } catch (PlanungException e) {
-                // Ignore for now
+                // Exception wird hier bewusst ignoriert – Ausfall ist optional
             }
         } else {
-            // Ausfall aufheben == Vertretung löschen
             loescheVertretung(stunde);
         }
     }

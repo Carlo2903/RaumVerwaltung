@@ -29,7 +29,7 @@ public class AbwesenheitDao extends GenericDao<Abwesenheit> {
                 .getResultList();
     }
 
-    // NEU
+
     public List<Abwesenheit> findeAlle() {
         clearCache();
         return entityManager

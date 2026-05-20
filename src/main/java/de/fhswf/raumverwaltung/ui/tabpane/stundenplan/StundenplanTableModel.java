@@ -69,7 +69,6 @@ public class StundenplanTableModel extends Observable {
         return instance;
     }
 
-    // Initialer Ladevorgang
     public void laden() {
         alleKlassen = klasseDao.findAll();
         alleLehrkraefte = lehrkraftDao.findAll();
@@ -81,7 +80,6 @@ public class StundenplanTableModel extends Observable {
         stundenplanDao.clearCache();
         alleZeitslots   = zeitslotDao.findAll();
 
-        // Aktives Schuljahr suchen
         Optional<Schuljahr> schuljahr = schuljahrDao.findeAktives();
         if (schuljahr.isEmpty()) {
             aktuellerPlan = null;
@@ -91,7 +89,6 @@ public class StundenplanTableModel extends Observable {
             return;
         }
 
-        // Ersten Plan des aktiven Schuljahres laden
         List<Stundenplan> plaene = stundenplanDao.findeNachSchuljahr(schuljahr.get());
         if (plaene.isEmpty()) {
             aktuellerPlan = null;
@@ -105,13 +102,11 @@ public class StundenplanTableModel extends Observable {
         bauGrid();
     }
 
-    // Klassen-Filter setzen und Grid neu aufbauen
     public void filterNachKlasse(Klasse klasse) {
         this.aktuelleKlasse = klasse;
         bauGrid();
     }
 
-    // Stunde speichern und Grid aktualisieren
     public void stundeSetzen(Stunde stunde) {
         if (stunde.getId() == null) {
             stundeDao.persist(stunde);
@@ -121,7 +116,6 @@ public class StundenplanTableModel extends Observable {
         bauGrid();
     }
 
-    // Stunde löschen
     public void stundeLoeschen(Stunde stunde) {
         if (stunde == null || stunde.getId() == null) return;
 
@@ -129,14 +123,12 @@ public class StundenplanTableModel extends Observable {
         bauGrid();
     }
 
-    // Grid aus den Stunden des aktiven Plans aufbauen
     private void bauGrid() {
         stundenGrid = new HashMap<>();
         stundenZaehler = new HashMap<>();
         vertretungenProStunde = new HashMap<>();
         lehrkraftStunden      = new HashMap<>();
 
-        // Alle Wochentage initialisieren
         for (Wochentag tag : Wochentag.values()) {
             stundenGrid.put(tag, new HashMap<>());
         }
@@ -169,7 +161,6 @@ public class StundenplanTableModel extends Observable {
             }
         });
 
-        // Stunden filtern (nach id falls gesetzt) und ins Grid eintragen
         aktuelleStunden.stream()
                 .filter(s -> aktuelleKlasse == null
                         || (s.getKlasse() != null &&

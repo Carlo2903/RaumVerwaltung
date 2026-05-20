@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 public class VertretungsService {
 
-    // Singleton – konsistent zu BenutzerService
     private static VertretungsService instance;
 
     private final AbwesenheitDao abwesenheitDao = new AbwesenheitDao();
@@ -30,7 +29,6 @@ public class VertretungsService {
         return instance;
     }
 
-    // Schritt 1: Abwesenheit erfassen
     public Abwesenheit erfasseAbwesenheit(Lehrkraft lehrkraft, LocalDate von,
                                           LocalDate bis, VertretungsGrund grund,
                                           String bemerkung) throws PlanungException {
@@ -54,7 +52,6 @@ public class VertretungsService {
         return abwesenheit;
     }
 
-    // Schritt 2: Betroffene Stunden ermitteln (über Wochentage, nicht Datum)
     public List<Stunde> findeBetroffeneStunden(Abwesenheit abwesenheit) {
         List<Wochentag> betroffeneTage = berechneWochentage(
                 abwesenheit.getVon(),
@@ -66,7 +63,6 @@ public class VertretungsService {
         );
     }
 
-    // Schritt 3: Verfügbare Vertretungslehrer für einen Zeitslot und Datum
     public List<Lehrkraft> findeVertretungskandidaten(Zeitslot zeitslot,
                                                       LocalDate datum) {
         List<Lehrkraft> verfuegbare =
@@ -96,7 +92,6 @@ public class VertretungsService {
         long aktuelleStunden = stundeDao.zaehleBelegtStunden(lehrkraft);
         return aktuelleStunden >= lehrkraft.getSollStunden();
     }
-    // Schritt 4: Vertretung zuweisen
     public Vertretung weiseVertretungZu(Stunde stunde, Lehrkraft vertretungsLehrer,
                                         LocalDate datum, VertretungsGrund grund,
                                         String bemerkung) throws PlanungException {
@@ -158,20 +153,16 @@ public class VertretungsService {
      * Ablauf: erst alle Vertretungen (mit Stunden-Reset), dann die Abwesenheit selbst.
      */
     public void loescheAbwesenheitKomplett(Abwesenheit abwesenheit) {
-        // 1. Alle betroffenen Stunden ermitteln
         List<Stunde> betroffene = findeBetroffeneStunden(abwesenheit);
 
-        // 2. Jede Vertretung löschen und Stunde zurücksetzen
         if (!betroffene.isEmpty()) {
             vertretungDao.findeNachStunden(betroffene)
                     .forEach(vertretungDao::loescheVertretungMitStundenReset);
         }
 
-        // 3. Abwesenheit löschen
         abwesenheitDao.remove(abwesenheit);
     }
 
-    // Hilfsmethode: Wochentage zwischen zwei Daten berechnen
     private List<Wochentag> berechneWochentage(LocalDate von, LocalDate bis) {
         List<Wochentag> tage = new ArrayList<>();
         LocalDate current = von;

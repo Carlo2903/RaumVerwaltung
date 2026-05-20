@@ -27,7 +27,6 @@ public class VertretungViewModel implements Observer {
     private final ObservableList<Lehrkraft> verfuegbareLehrer
             = FXCollections.observableArrayList();
 
-    // NEU
     @Getter
     private final ObservableList<AbwesenheitUebersicht> abwesenheitUebersicht
             = FXCollections.observableArrayList();
@@ -42,7 +41,7 @@ public class VertretungViewModel implements Observer {
         lehrkraefte.setAll(model.getAlleLehrkraefte());
         betroffeneStunden.setAll(model.getBetroffeneStunden());
         verfuegbareLehrer.setAll(model.getVerfuegbareLehrer());
-        abwesenheitUebersicht.setAll(model.getAbwesenheitUebersicht()); // NEU
+        abwesenheitUebersicht.setAll(model.getAbwesenheitUebersicht());
     }
 
     public void laden()                        { model.laden(); }
@@ -62,7 +61,6 @@ public class VertretungViewModel implements Observer {
         model.vertretungZuweisen(lehrer, datum);
     }
 
-    // NEU
     public void abwesenheitAuswaehlen(AbwesenheitUebersicht uebersicht) {
         model.abwesenheitDirektSetzen(uebersicht.abwesenheit());
     }

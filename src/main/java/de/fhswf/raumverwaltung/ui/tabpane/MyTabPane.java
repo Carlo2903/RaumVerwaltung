@@ -19,7 +19,6 @@ public class MyTabPane extends TabPane {
 
     private static MyTabPane instance;
 
-    // Admin-Tabs – können im Konstruktor erstellt werden
     private final RaumTab          raumTab          = new RaumTab();
     private final LehrkraftTab     lehrkraftTab     = new LehrkraftTab();
     private final FachTab          fachTab          = new FachTab();
@@ -31,7 +30,6 @@ public class MyTabPane extends TabPane {
     private final SchuelerVerwaltungTab schuelerVerwaltungTab = new SchuelerVerwaltungTab();
     private final ErziehungsberechtigterTab erziehungsberechtigterTab = new ErziehungsberechtigterTab();
 
-    // NEU: Lehrer-Tab erst nach Login erstellen – nicht hier
     private LehrerStundenplanTab lehrerStundenplanTab;
 
     private MyTabPane() {

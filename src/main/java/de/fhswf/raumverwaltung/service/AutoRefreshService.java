@@ -17,7 +17,6 @@ public class AutoRefreshService {
     private final Timeline         timeline;
 
     private AutoRefreshService() {
-        // Alle 30 Sekunden alle registrierten Komponenten neu laden
         timeline = new Timeline(
                 new KeyFrame(Duration.seconds(30), e -> refreshAlle())
         );
@@ -31,14 +30,12 @@ public class AutoRefreshService {
         return instance;
     }
 
-    // Komponente für Auto-Refresh registrieren
     public void registriere(Reloadable reloadable) {
         if (!registrierte.contains(reloadable)) {
             registrierte.add(reloadable);
         }
     }
 
-    // Komponente abmelden
     public void abmelden(Reloadable reloadable) {
         registrierte.remove(reloadable);
     }

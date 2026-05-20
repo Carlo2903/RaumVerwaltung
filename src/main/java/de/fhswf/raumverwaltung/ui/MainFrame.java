@@ -24,7 +24,6 @@ public class MainFrame extends StackPane {
     public MainFrame() {
         MyTabPane tabPane = MyTabPane.getInstance();
         
-        // 1. Header erstellen
         HBox header = new HBox(16);
         header.setAlignment(Pos.CENTER_RIGHT);
         header.setPadding(new Insets(10, 20, 10, 20));
@@ -53,13 +52,11 @@ public class MainFrame extends StackPane {
 
         header.getChildren().addAll(titelLabel, spacer, userLabel, btnLogout);
 
-        // 2. Main Container zusammensetzen
         mainContainer.setTop(header);
         mainContainer.setCenter(tabPane);
         
         StackPane.setAlignment(mainContainer, Pos.TOP_LEFT);
 
-        // 3. Dem MainFrame hinzufügen (LoginView als Overlay)
         this.getChildren().addAll(mainContainer, loginView);
         this.setMaxWidth(Double.MAX_VALUE);
         this.setMaxHeight(Double.MAX_VALUE);
@@ -76,16 +73,12 @@ public class MainFrame extends StackPane {
     }
     
     private void handleLogout() {
-        // 1. Service: Benutzer abmelden
         BenutzerService.getInstance().logout();
         
-        // 2. Auto-Refresh für Hintergrunddaten stoppen
         AutoRefreshService.getInstance().stoppen();
         
-        // 3. TabPane leeren (damit niemand private Daten sieht)
         MyTabPane.getInstance().removeAll();
         
-        // 4. LoginView Eingabefelder leeren und wieder als Overlay anzeigen
         loginView.clearInputs();
         if (!this.getChildren().contains(loginView)) {
             this.getChildren().add(loginView);

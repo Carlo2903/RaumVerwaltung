@@ -49,7 +49,6 @@ public class MainApp extends Application {
     private void erstelleStandardSchuljahr() {
         SchuljahrDao schuljahrDao = new SchuljahrDao();
 
-        // Nur anlegen falls noch kein aktives Schuljahr existiert
         if (schuljahrDao.findeAktives().isPresent()) return;
 
         Schuljahr schuljahr = Schuljahr.builder()
@@ -60,7 +59,6 @@ public class MainApp extends Application {
                 .build();
         schuljahrDao.persist(schuljahr);
 
-        // Dazugehörigen Stundenplan anlegen
         StundenplanDao stundenplanDao = new StundenplanDao();
         Stundenplan stundenplan = new Stundenplan();
         stundenplan.setGueltigAb(java.time.LocalDate.of(2025, 8, 1));
@@ -74,7 +72,6 @@ public class MainApp extends Application {
         ZeitslotDao dao = new ZeitslotDao();
         if (!dao.findAll().isEmpty()) return;
 
-        // 6 Stunden pro Tag, Mo–Fr
         String[][] zeiten = {
                 {"08:00", "08:45"},
                 {"08:45", "09:30"},

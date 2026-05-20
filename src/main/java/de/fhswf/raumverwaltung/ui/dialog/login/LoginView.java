@@ -22,7 +22,6 @@ public class LoginView extends StackPane {
         this.setStyle("-fx-background-color: #f0f2f5;");
         this.getChildren().add(buildCard());
 
-        // Reaktiv auf Fehlermeldungen aus dem ViewModel reagieren (MVVM-konform)
         viewModel.getFehlerProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && !newVal.isBlank()) {
                 fehlerLabel.setText(newVal);
@@ -37,10 +36,6 @@ public class LoginView extends StackPane {
         });
     }
 
-    // ---------------------------------------------------------------
-    // Layout
-    // ---------------------------------------------------------------
-
     private VBox buildCard() {
         VBox card = new VBox(16);
         card.setAlignment(Pos.CENTER);
@@ -53,7 +48,6 @@ public class LoginView extends StackPane {
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 20, 0, 0, 4);"
         );
 
-        // Avatar
         ImageView avatar = new ImageView();
         try {
             Image logo = new Image(getClass().getResourceAsStream("/logo2.png"));
@@ -64,7 +58,6 @@ public class LoginView extends StackPane {
         } catch (Exception e) {
             System.err.println("Konnte logo2.png nicht laden.");
         }
-        // Felder
         benutzernameField.setPromptText("Benutzername");
         benutzernameField.setPrefHeight(44);
         benutzernameField.setMaxWidth(Double.MAX_VALUE);
@@ -74,12 +67,10 @@ public class LoginView extends StackPane {
         passwortField.setMaxWidth(Double.MAX_VALUE);
         passwortField.setOnAction(e -> handleLogin());
 
-        // Fehlermeldung
         fehlerLabel.setStyle("-fx-text-fill: #cf222e; -fx-font-size: 13;");
         fehlerLabel.setVisible(false);
         fehlerLabel.setManaged(false);
 
-        // Button
         Button btnAnmelden = new Button("Anmelden");
         btnAnmelden.setMaxWidth(Double.MAX_VALUE);
         btnAnmelden.setPrefHeight(44);
@@ -102,10 +93,6 @@ public class LoginView extends StackPane {
 
         return card;
     }
-
-    // ---------------------------------------------------------------
-    // Logik
-    // ---------------------------------------------------------------
 
     private void handleLogin() {
         fehlerLabel.setVisible(false);

@@ -89,12 +89,12 @@ public class VertretungDao extends GenericDao<Vertretung> {
         try {
             entityManager.getTransaction().begin();
 
-            // Stunde zurücksetzen (sowohl Vertretung als auch Ausfall löschen)
+
             Stunde stunde = entityManager.merge(vertretung.getStunde());
             stunde.setIstVertretung(false);
             stunde.setIstAusfall(false);
 
-            // Vertretung löschen
+
             Vertretung managed = entityManager.merge(vertretung);
             entityManager.remove(managed);
 

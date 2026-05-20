@@ -29,7 +29,7 @@ public class KonfliktService {
     public void validiereStunde(Stunde neueStunde) throws PlanungException {
 
 
-        // Null-Checks zuerst
+
         if (neueStunde.getZeitslot() == null) {
             throw new PlanungException("Unvollständige Daten", "Zeitslot muss gesetzt sein.");
         }
@@ -58,7 +58,7 @@ public class KonfliktService {
             Stunde k = konflikte.get(0);
             String grund;
 
-            // FIX: else-if statt if/– erste Übereinstimmung gewinnt
+
             if (k.getLehrkraft().equals(neueStunde.getLehrkraft())) {
                 grund = "Lehrkraft '" + k.getLehrkraft().getName() + "' hat zu diesem Zeitslot bereits Unterricht.";
             } else if (k.getRaum().equals(neueStunde.getRaum())) {
@@ -101,7 +101,7 @@ public class KonfliktService {
         int sollStunden = neueStunde.getLehrkraft().getSollStunden();
         if (sollStunden <= 0) return;
 
-        // Wie viele Stunden hat die Lehrkraft bereits?
+
         long aktuelleStunden = stundeDao
                 .findeNachStundenplan(neueStunde.getStundenplan()).stream()
                 .filter(s -> s.getLehrkraft() != null &&
@@ -134,7 +134,7 @@ public class KonfliktService {
                         neueStunde.getFach()
                 )
                 .stream()
-                // NEU: null-sicherer Vergleich
+                // null-sicherer Vergleich: bei Bearbeitung eigene Stunde nicht mitzählen
                 .filter(s -> neueStunde.getId() == null
                         || !s.getId().equals(neueStunde.getId()))
                 .count();

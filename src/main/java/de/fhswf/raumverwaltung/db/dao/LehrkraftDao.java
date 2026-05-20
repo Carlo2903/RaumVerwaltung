@@ -46,7 +46,7 @@ public class LehrkraftDao extends GenericDao<Lehrkraft> {
 
     public void entferneFachAusAllenLehrkraeften(Fach fach) {
         entityManager.clear();
-        // Alle Lehrkräfte die dieses Fach haben laden
+
         List<Lehrkraft> betroffene = entityManager
                 .createQuery(
                         "SELECT l FROM Lehrkraft l WHERE :fach MEMBER OF l.faecher",
@@ -54,7 +54,7 @@ public class LehrkraftDao extends GenericDao<Lehrkraft> {
                 .setParameter("fach", fach)
                 .getResultList();
 
-        // Fach aus jeder Lehrkraft entfernen
+
         entityManager.getTransaction().begin();
         betroffene.forEach(l -> l.getFaecher().remove(fach));
         entityManager.getTransaction().commit();
@@ -66,7 +66,7 @@ public class LehrkraftDao extends GenericDao<Lehrkraft> {
         try {
             entityManager.getTransaction().begin();
 
-            // Fächer in aktuelle Session einbinden – sonst sind sie detached
+            // Fächer müssen in die aktuelle Session eingebunden werden, da sie sonst detached sind
             List<Fach> verwaltete = entity.getFaecher().stream()
                     .map(f -> entityManager.merge(f))
                     .toList();
@@ -86,7 +86,7 @@ public class LehrkraftDao extends GenericDao<Lehrkraft> {
         try {
             entityManager.getTransaction().begin();
 
-            // Fächer auch beim Update in Session einbinden
+
             List<Fach> verwaltete = entity.getFaecher().stream()
                     .map(f -> entityManager.merge(f))
                     .toList();

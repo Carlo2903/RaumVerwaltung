@@ -6,7 +6,6 @@ import javafx.scene.control.ScrollPane;
 
 public class VertretungTab extends MyTab implements Reloadable {
 
-    // ViewModel hier – nicht in VertretungView
     private final VertretungViewModel viewModel;
 
     public VertretungTab() {

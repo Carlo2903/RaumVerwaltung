@@ -44,7 +44,6 @@ public class VertretungView extends VBox {
                 buildSektion3()
         );
 
-        // ListChangeListener statt ObjectProperty-Listener
         viewModel.getLehrkraefte().addListener(
                 (ListChangeListener<Lehrkraft>) c ->
                         lehrkraftBox.setItems(viewModel.getLehrkraefte())
@@ -105,7 +104,6 @@ public class VertretungView extends VBox {
                 )
         );
 
-        // Farbe über Record-Methode – kein String-Parsing
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -127,7 +125,6 @@ public class VertretungView extends VBox {
 
         table.getColumns().addAll(colLehrer, colZeitraum, colGrund, colStatus);
 
-        // Löschen-Spalte – Abwesenheit komplett entfernen
         TableColumn<AbwesenheitUebersicht, Void> colLoeschen = new TableColumn<>("");
         colLoeschen.setPrefWidth(100);
         colLoeschen.setCellFactory(col -> new TableCell<>() {
@@ -144,7 +141,6 @@ public class VertretungView extends VBox {
                     AbwesenheitUebersicht row =
                             getTableView().getItems().get(getIndex());
 
-                    // Bestätigung – kein versehentliches Löschen
                     Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                             "Abwesenheit von \"" +
                             row.abwesenheit().getLehrkraft().getName() +
@@ -156,7 +152,6 @@ public class VertretungView extends VBox {
                     confirm.setTitle("Abwesenheit löschen");
                     confirm.showAndWait().ifPresent(btn -> {
                         if (btn == ButtonType.OK) {
-                            // View ruft nur ViewModel auf – keine Logik hier
                             viewModel.abwesenheitLoeschen(row.abwesenheit());
                         }
                     });
@@ -172,7 +167,6 @@ public class VertretungView extends VBox {
 
         table.getColumns().add(colLoeschen);
 
-        // Klick → Abwesenheit direkt laden
         table.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 AbwesenheitUebersicht selected =
@@ -204,7 +198,6 @@ public class VertretungView extends VBox {
         Label titel = new Label("② Abwesenheit erfassen");
         titel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
 
-        // Dropdowns befüllen
         grundBox.getItems().addAll(VertretungsGrund.values());
         grundBox.setValue(VertretungsGrund.KRANK);
         lehrkraftBox.setPromptText("Lehrkraft wählen...");
@@ -245,7 +238,6 @@ public class VertretungView extends VBox {
         Label titel = new Label("③ Betroffene Stunden");
         titel.setStyle("-fx-font-weight: bold; -fx-font-size: 14;");
 
-        // Spalten
         TableColumn<Stunde, String> colNr    = new TableColumn<>("Std");
         TableColumn<Stunde, String> colZeit  = new TableColumn<>("Zeit");
         TableColumn<Stunde, String> colKlasse = new TableColumn<>("Klasse");
@@ -253,7 +245,6 @@ public class VertretungView extends VBox {
         TableColumn<Stunde, String> colStatus = new TableColumn<>("Status");
         TableColumn<Stunde, Void>   colAktion = new TableColumn<>("Aktion");
 
-        // Lambdas – kein PropertyValueFactory
         colNr.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
                         String.valueOf(data.getValue().getZeitslot().getStundenNummer())
@@ -287,7 +278,6 @@ public class VertretungView extends VBox {
             return new javafx.beans.property.SimpleStringProperty(status);
         });
 
-        // Status-Zelle färben
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -305,7 +295,6 @@ public class VertretungView extends VBox {
             }
         });
 
-        // "Vertretung zuweisen" / "Ausfall" Button in jeder Zeile
         colAktion.setCellFactory(col -> new TableCell<>() {
             private final Button btnZuweisen = new Button("Vertretung →");
             private final Button btnAusfall  = new Button("Als Ausfall markieren");
@@ -404,7 +393,6 @@ public class VertretungView extends VBox {
         return sektion;
     }
 
-    // Kandidaten-Karten bauen – wie in eurem Mockup
     private void aktualisiereKandidaten(
             javafx.collections.ObservableList<Lehrkraft> lehrer) {
         kandidatenPane.getChildren().clear();
@@ -427,7 +415,6 @@ public class VertretungView extends VBox {
                         "-fx-border-radius: 8;"
         );
 
-        // Name + Fächer
         String faecher = lehrkraft.getFaecher().stream()
                 .map(f -> f.getKuerzel())
                 .reduce("", (a, b) -> a.isEmpty() ? b : a + ", ");

@@ -35,7 +35,6 @@ public class LoginViewModel implements Observer {
     @Override
     public void update(Observable o, Object arg) {
         if (arg instanceof LoginSuccessEvent) {
-            // Tabs laden und Login-Maske entfernen
             MyTabPane.getInstance().addTabs();
             MainApp.showMainContent();
 

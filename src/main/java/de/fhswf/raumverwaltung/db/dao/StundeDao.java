@@ -99,13 +99,13 @@ public class StundeDao extends GenericDao<Stunde> {
         try {
             entityManager.getTransaction().begin();
 
-            // 1. Vertretungen dieser Stunde zuerst löschen (FK-Constraint)
+
             entityManager.createQuery(
                             "DELETE FROM Vertretung v WHERE v.stunde.id = :sid")
                     .setParameter("sid", stundeId)
                     .executeUpdate();
 
-            // 2. Stunde selbst löschen
+
             entityManager.createQuery(
                             "DELETE FROM Stunde s WHERE s.id = :sid")
                     .setParameter("sid", stundeId)

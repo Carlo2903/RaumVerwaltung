@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public class ZeitslotDao extends GenericDao<Zeitslot> {
 
-    // Alle Zeitslots eines Tages, sortiert nach Stundennummer
+
     public List<Zeitslot> findeNachWochentag(Wochentag wochentag) {
         return entityManager
                 .createQuery(

@@ -18,7 +18,6 @@ public class BenutzerService {
     private static BenutzerService instance;
     private final BenutzerDao benutzerDao = new BenutzerDao();
 
-    // Aktuell eingeloggter Benutzer
     @Getter
     private Benutzer aktuellerBenutzer;
 
@@ -57,7 +56,6 @@ public class BenutzerService {
     }
 
 
-    // SHA-256 Hash – reicht für ein Uni-Projekt
     private String hashPasswort(String passwort) throws PlanungException {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -85,7 +83,6 @@ public class BenutzerService {
                                 .equals(lb.getLehrkraft().getId()));
     }
 
-    // Klasse des aktuellen Klassenlehrers
     public Klasse getKlasseDesKlassenlehrers() {
         if (!(aktuellerBenutzer instanceof LehrerBenutzer lb)) return null;
         return new KlasseDao().findAll().stream()

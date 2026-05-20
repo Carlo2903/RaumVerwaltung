@@ -17,14 +17,12 @@ public class KlasseTableViewModel implements Observer {
 
     private final KlasseTableModel model;
 
-    // DAO nur hier – nie in der View
     private final LehrkraftDao lehrkraftDao = new LehrkraftDao();
 
     @Getter
     private final ObjectProperty<ObservableList<KlasseTableEntity>> klassenProperty
             = new SimpleObjectProperty<>();
 
-    // Lehrkräfte für ComboBox in der View
     @Getter
     private final ObservableList<Lehrkraft> lehrkraefte
             = FXCollections.observableArrayList();
@@ -48,10 +46,7 @@ public class KlasseTableViewModel implements Observer {
     }
 
     public void refresh() {
-        // Klassen laden
         model.loadAll();
-        // Lehrkräfte für ComboBox laden – kein DAO in der View nötig
-
         lehrkraefte.setAll(lehrkraftDao.findAll());
     }
 

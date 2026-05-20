@@ -58,7 +58,7 @@ public abstract class GenericDao<T> implements Dao<T> {
             if (entityManager.getTransaction().isActive()) {
                 entityManager.getTransaction().rollback();
             }
-            // PlanungException statt roher PersistenceException
+
             throw new jakarta.persistence.PersistenceException(
                     "Datensatz kann nicht gelöscht werden – " +
                             "er wird noch von anderen Einträgen verwendet.", e

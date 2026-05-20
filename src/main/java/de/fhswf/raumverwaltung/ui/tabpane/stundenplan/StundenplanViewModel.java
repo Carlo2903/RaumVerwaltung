@@ -38,7 +38,6 @@ public class StundenplanViewModel implements Observer, StundenplanViewModelInter
     public void update(Observable o, Object arg) {
         gridProperty.set(model.getStundenGrid());
 
-        // NEU: nur setzen wenn sich Klassen wirklich geändert haben
         List<Klasse> neueKlassen = model.getAlleKlassen();
         if (klassenProperty.get() == null ||
                 !klassenProperty.get().containsAll(neueKlassen) ||
@@ -59,7 +58,6 @@ public class StundenplanViewModel implements Observer, StundenplanViewModelInter
     public void filterNachKlasse(Klasse k)     { model.filterNachKlasse(k); }
 
     public void stundeSetzen(Stunde stunde) throws PlanungException {
-        // Konfliktprüfung vor dem Speichern
         konfliktService.validiereStunde(stunde);
         model.stundeSetzen(stunde);
     }
