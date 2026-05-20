@@ -24,7 +24,4 @@ public class Klasse {
 	@JoinColumn(name = "lehrkraft_id")
 	private Lehrkraft klassenLehrer;
 
-	// Schueler-Liste (OneToMany zu Schueler, falls ihr die Klasse noch erstellt)
-	// @OneToMany(mappedBy = "klasse")
-	// private Collection<Schueler> schuelerListe;
 }

@@ -30,6 +30,7 @@ public class ErziehungsberechtigterTableViewModel implements Observer {
     @Getter
     private final StringProperty fehlerProperty = new SimpleStringProperty();
 
+    @Getter
     private Erziehungsberechtigter aktuellerDatensatz = null;
 
     public ErziehungsberechtigterTableViewModel() {
@@ -115,5 +116,4 @@ public class ErziehungsberechtigterTableViewModel implements Observer {
 
     public void datensatzAuswaehlen(Erziehungsberechtigter e) { this.aktuellerDatensatz = e; }
     public void datensatzAbwaehlen()                          { this.aktuellerDatensatz = null; }
-    public Erziehungsberechtigter getAktuellerDatensatz()     { return aktuellerDatensatz; }
 }

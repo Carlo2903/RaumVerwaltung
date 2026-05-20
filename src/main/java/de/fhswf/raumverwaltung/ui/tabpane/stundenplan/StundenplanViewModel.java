@@ -67,7 +67,7 @@ public class StundenplanViewModel implements Observer, StundenplanViewModelInter
     /**
      * Markiert eine bestehende Stunde als Ausfall.
      * Keine Konfliktprüfung nötig – die Stunde existiert bereits im Plan.
-     * Das {@code geaendert}-Flag wird gesetzt für das Änderungsprotokoll.
+     * Das {geaendert}-Flag wird gesetzt für das Änderungsprotokoll.
      */
     public void stundeAlsAusfallMarkieren(Stunde stunde) {
         stunde.setIstAusfall(true);

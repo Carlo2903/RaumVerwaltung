@@ -51,14 +51,14 @@ public class SchuelerVerwaltungTableModel extends Observable {
     }
 
     public void loeschen(Schueler s) {
-        // 1. Alle Erziehungsberechtigten des Schülers löschen
+        // Alle Erziehungsberechtigten des Schülers löschen
         de.fhswf.raumverwaltung.db.dao.ErziehungsberechtigterDao eDao = 
                 new de.fhswf.raumverwaltung.db.dao.ErziehungsberechtigterDao();
         List<de.fhswf.raumverwaltung.db.entities.Erziehungsberechtigter> eltern = 
                 eDao.findeNachSchueler(s);
         eltern.forEach(eDao::remove);
 
-        // 2. Schüler löschen
+        // Schüler löschen
         schuelerDao.remove(s);
         loadAll();
     }

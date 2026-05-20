@@ -12,7 +12,7 @@ import java.util.*;
 
 public class LehrerStundenplanViewModel implements Observer, StundenplanViewModelInterface  {
 
-    // KEIN Singleton – eigene Instanz pro Lehrer-Session
+
     private final LehrerStundenplanModel model;
 
     @Getter

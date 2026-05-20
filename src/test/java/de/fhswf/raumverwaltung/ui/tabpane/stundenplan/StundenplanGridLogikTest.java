@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Da das ViewModel intern das Singleton-Model und eine DB-Verbindung verwendet,
  * testen wir hier die Grid-Datenstruktur-Logik isoliert –
  * d. h. das korrekte Befüllen und Auslesen des
- * {@code Map<Wochentag, Map<Integer, Stunde>>}-Grids.
+ * {Map<Wochentag, Map<Integer, Stunde>>}-Grids.
  */
 @DisplayName("Stundenplan-Grid-Logik")
 class StundenplanGridLogikTest {

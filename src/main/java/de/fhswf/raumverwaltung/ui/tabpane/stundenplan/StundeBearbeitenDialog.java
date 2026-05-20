@@ -40,7 +40,7 @@ public class StundeBearbeitenDialog {
 
         // ---------------------------------------------------------------
 
-        // ComboBoxen – alle Daten kommen aus ViewModel, kein DAO hier
+        // ComboBoxen
 
         // ---------------------------------------------------------------
 
@@ -54,7 +54,7 @@ public class StundeBearbeitenDialog {
         ComboBox<Klasse> klasseBox = new ComboBox<>();
 
 
-        // Converter – saubere Anzeige statt toString()
+        // Converter
 
         fachBox.setConverter(EntityStringConverter.forFach());
 
@@ -65,7 +65,7 @@ public class StundeBearbeitenDialog {
         klasseBox.setConverter(EntityStringConverter.forKlasse());
 
 
-        // Daten aus ViewModel laden – kein DAO in der View
+        // Daten aus ViewModel laden
 
         fachBox.getItems().addAll(viewModel.getAlleFaecher());
 
@@ -83,7 +83,6 @@ public class StundeBearbeitenDialog {
 
         // Fach gewählt → nur passende Lehrkräfte anzeigen
 
-        // Filterlogik liegt im ViewModel – nicht hier
 
         fachBox.setOnAction(e -> {
 
@@ -220,7 +219,7 @@ public class StundeBearbeitenDialog {
 
         if (vorhandeneStunde != null) {
 
-            // ── Ausfall markieren / aufheben ──────────────────────────────
+            // ── Ausfall markieren / aufheben
             boolean istAusfallAktuell = vorhandeneStunde.isIstAusfall();
             String ausfallLabel = istAusfallAktuell ? "↩ Ausfall aufheben" : "✕ Als Ausfall markieren";
 
@@ -230,7 +229,6 @@ public class StundeBearbeitenDialog {
             Button ausfallBtn = (Button) dialog.getDialogPane().lookupButton(btnAusfall);
             ausfallBtn.setStyle(istAusfallAktuell ? "-fx-background-color: #bf8700; -fx-text-fill: white;" : "-fx-background-color: #e36209; -fx-text-fill: white;");
 
-            // View delegiert an ViewModel – keine Logik hier
             ausfallBtn.setOnAction(e -> {
                 if (istAusfallAktuell) {
                     viewModel.ausfallAufheben(vorhandeneStunde);
@@ -240,7 +238,7 @@ public class StundeBearbeitenDialog {
                 dialog.close();
             });
 
-            // ── Stunde löschen ────────────────────────────────────────────
+            //Stunde löschen
 
             ButtonType btnLoeschen = new ButtonType("Löschen", ButtonBar.ButtonData.LEFT);
             dialog.getDialogPane().getButtonTypes().add(btnLoeschen);
@@ -249,7 +247,7 @@ public class StundeBearbeitenDialog {
             loeschenBtn.setStyle("-fx-background-color: #cf222e; -fx-text-fill: white;");
 
             loeschenBtn.setOnAction(e -> {
-                // NEU: Prüfen ob Vertretung vorhanden
+
                 boolean hatVertretung = vorhandeneStunde.isIstVertretung();
 
                 if (hatVertretung) {
@@ -278,7 +276,7 @@ public class StundeBearbeitenDialog {
         }
 
 
-        // Speichern-Button – Validierung über Konflikt-Label
+        // Speichern-Button
 
         Button speichernBtn = (Button) dialog.getDialogPane()
 
@@ -396,7 +394,7 @@ public class StundeBearbeitenDialog {
 
         if (vorhandeneStunde != null) {
 
-            // Fach zuerst setzen – fachBox.setOnAction füllt lehrerBox automatisch
+            // Fach zuerst setzen –
 
             fachBox.setValue(vorhandeneStunde.getFach());
 

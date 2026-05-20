@@ -46,7 +46,7 @@ public class ErziehungsberechtigterTable
                 colSchueler, colTelefon, colEmail
         );
 
-        // Tabelle mit ViewModel verbinden – wie überall im Projekt
+        // Tabelle mit ViewModel verbinden
         viewModel.getErziehungsberechtigteProperty().addListener(
                 (obs, o, n) -> { if (n != null) setItems(n); }
         );

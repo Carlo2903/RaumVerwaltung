@@ -30,6 +30,7 @@ public class KlasseTableViewModel implements Observer {
     @Getter
     private final StringProperty fehlerProperty = new SimpleStringProperty();
 
+    @Getter
     private Klasse aktuellerDatensatz = null;
 
     public KlasseTableViewModel() {
@@ -112,7 +113,4 @@ public class KlasseTableViewModel implements Observer {
         this.aktuellerDatensatz = null;
     }
 
-    public Klasse getAktuellerDatensatz() {
-        return aktuellerDatensatz;
-    }
 }

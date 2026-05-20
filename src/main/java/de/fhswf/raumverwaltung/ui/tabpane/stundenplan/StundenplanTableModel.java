@@ -40,7 +40,6 @@ public class StundenplanTableModel extends Observable {
     private List<Raum> alleRaeume = new ArrayList<>();
 
     // Das Grid: Wochentag → Stundennummer → Stunde
-    // Beispiel: grid.get(MONTAG).get(1) = die 1. Stunde am Montag
     @Getter
     private Map<Wochentag, Map<Integer, Stunde>> stundenGrid = new HashMap<>();
 
@@ -177,7 +176,7 @@ public class StundenplanTableModel extends Observable {
 
 
     public Optional<Zeitslot> findeZeitslot(Wochentag tag, int stundenNummer) {
-        // Direkt aus DB – nicht aus gecachter Liste
+
         return zeitslotDao.findeNachTagUndNummer(tag, stundenNummer);
     }
 }

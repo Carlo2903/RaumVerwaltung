@@ -14,7 +14,7 @@ public class Zeitslot {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private int stundenNummer; // z.B. 1, 2, 3...
+	private int stundenNummer;
 
 	@Enumerated(EnumType.STRING)
 	private Wochentag wochentag;

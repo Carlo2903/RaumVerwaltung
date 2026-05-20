@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit-Tests für {@link KonfliktService}.
  *
- * Da KonfliktService DAOs intern per {@code new} erzeugt, testen wir hier
+ * Da KonfliktService DAOs intern per { ew} erzeugt, testen wir hier
  * nur die Fälle, die keine DB-Abfrage auslösen (Null-Checks, Logik auf
  * bereits geladenen Daten). Für die DB-abhängigen Pfade sind Integrationstests
  * notwendig (siehe KonfliktServiceIntegrationTest).

@@ -11,7 +11,6 @@ import lombok.*;
 @AllArgsConstructor
 public class SchuelerBenutzer extends Benutzer {
 
-    // Klasse direkt referenzieren – Schüler haben noch kein eigenes Entity
     @ManyToOne
     @JoinColumn(name = "klasse_id", nullable = false)
     private Klasse klasse;

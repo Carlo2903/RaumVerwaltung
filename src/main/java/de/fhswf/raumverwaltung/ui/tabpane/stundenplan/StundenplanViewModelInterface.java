@@ -24,9 +24,9 @@ public interface StundenplanViewModelInterface {
      * Öffnet den Dialog zum Bearbeiten einer Stunde.
      * Im Read-Only-Modus (z. B. Lehrersicht) ist die Implementierung eine leere Methode.
      *
-     * @param stunde       die zu bearbeitende Stunde, oder {@code null} für eine neue Stunde
+     * @param stunde       die zu bearbeitende Stunde, oder {null} für eine neue Stunde
      * @param tag          der Wochentag der Zelle
      * @param stundenNummer die Stundennummer der Zelle
      */
     void zeigeBearbeitenDialog(Stunde stunde, Wochentag tag, int stundenNummer);
-}
+}

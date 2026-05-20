@@ -15,7 +15,7 @@ public class SchuelerPortalView extends BorderPane {
 
     private final SchuelerPortalViewModel viewModel;
 
-    // Ansichts-Umschalter – nur noch zwei
+    // Ansichts-Umschalter
     private final ToggleButton btnHeute = new ToggleButton("Heute");
     private final ToggleButton btnWoche = new ToggleButton("Woche");
 
@@ -25,13 +25,10 @@ public class SchuelerPortalView extends BorderPane {
     private final Button btnWocheZurueck = new Button("← Vorherige Woche");
     private final Button btnWocheVor     = new Button("Nächste Woche →");
 
-    // Titel – einmal erstellt und gebunden
     private final Label lblTitel = new Label();
 
-    // Navigationsbereich – wird je nach Ansicht befüllt
     private final HBox navigationBox = new HBox(12);
 
-    // Inhaltsbereich
     private final VBox inhalt = new VBox(8);
 
     public SchuelerPortalView(SchuelerPortalViewModel viewModel) {
@@ -109,10 +106,10 @@ public class SchuelerPortalView extends BorderPane {
             }
         });
 
-// Initial – Tages-Titel binden
+
         lblTitel.textProperty().bind(viewModel.getTagesTitelProperty());
 
-// ListChangeListener statt ObjectProperty-Listener:
+
         viewModel.getTagesStundenProperty().addListener(
                 (ListChangeListener<Stunde>) c -> {
                     if (btnHeute.isSelected()) zeigeTagsansicht();
@@ -138,9 +135,6 @@ public class SchuelerPortalView extends BorderPane {
         return header;
     }
 
-    // ---------------------------------------------------------------
-    // Navigation – einmal aufbauen, kein doppelter View-Aufruf
-    // ---------------------------------------------------------------
 
     private void aktualisiereNavigation() {
         navigationBox.getChildren().clear();
@@ -158,9 +152,6 @@ public class SchuelerPortalView extends BorderPane {
         }
     }
 
-    // ---------------------------------------------------------------
-    // Inhaltsbereich
-    // ---------------------------------------------------------------
 
     private ScrollPane buildInhalt() {
         inhalt.setPadding(new Insets(16));
@@ -227,7 +218,7 @@ public class SchuelerPortalView extends BorderPane {
             wochenGrid.add(kopf, i, 0);
         }
 
-        // Direkt aus ObservableList lesen
+
         var alleStunden = viewModel.getWochenStundenProperty();
         int[] zeilenzaehler = new int[5];
         java.util.Arrays.fill(zeilenzaehler, 1);
@@ -251,9 +242,6 @@ public class SchuelerPortalView extends BorderPane {
         inhalt.getChildren().add(wochenGrid);
     }
 
-    // ---------------------------------------------------------------
-    // Stunden-Karte – datum-abhängige Vertretungsanzeige
-    // ---------------------------------------------------------------
 
     private HBox buildStundenKarte(Stunde stunde, LocalDate datum) {
         // Vertretung oder Ausfall nur wenn Datum übereinstimmt

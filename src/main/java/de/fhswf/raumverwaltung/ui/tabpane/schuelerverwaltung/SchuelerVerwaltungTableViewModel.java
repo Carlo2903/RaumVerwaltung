@@ -28,6 +28,7 @@ public class SchuelerVerwaltungTableViewModel implements Observer {
     @Getter
     private final StringProperty fehlerProperty = new SimpleStringProperty();
 
+    @Getter
     private Schueler aktuellerDatensatz = null;
 
     public SchuelerVerwaltungTableViewModel() {
@@ -106,5 +107,4 @@ public class SchuelerVerwaltungTableViewModel implements Observer {
 
     public void datensatzAuswaehlen(Schueler s) { this.aktuellerDatensatz = s; }
     public void datensatzAbwaehlen()            { this.aktuellerDatensatz = null; }
-    public Schueler getAktuellerDatensatz()     { return aktuellerDatensatz; }
 }

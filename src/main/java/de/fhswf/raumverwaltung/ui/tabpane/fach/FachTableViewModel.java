@@ -21,6 +21,7 @@ public class FachTableViewModel implements Observer {
     @Getter
     private final StringProperty fehlerProperty = new SimpleStringProperty();
 
+    @Getter
     private Fach aktuellerDatensatz = null;
 
     public FachTableViewModel() {
@@ -109,7 +110,4 @@ public class FachTableViewModel implements Observer {
         this.aktuellerDatensatz = null;
     }
 
-    public Fach getAktuellerDatensatz() {
-        return aktuellerDatensatz;
-    }
 }
