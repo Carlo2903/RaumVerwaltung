@@ -16,9 +16,10 @@
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://ep-ancient-recipe-aliaprok-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&amp;channel_binding=require"/>
-            <property name="jakarta.persistence.jdbc.user" value="neondb_owner"/>
-            <property name="jakarta.persistence.jdbc.password" value="npg_alDEy8B3OnRd"/>
+            <!-- Zugangsdaten der lokalen PostgreSQL-Datenbank hier eintragen -->
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/schulverwaltung"/>
+            <property name="jakarta.persistence.jdbc.user" value="postgres"/>
+            <property name="jakarta.persistence.jdbc.password" value="DEIN_PASSWORT"/>
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.show_sql" value="true"/>

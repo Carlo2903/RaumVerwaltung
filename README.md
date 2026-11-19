@@ -1,96 +1,79 @@
-# 🏫 Schul-Planer Pro 2026 (Raumverwaltung & Stundenplanung)
+# Schul-Planer (Raumverwaltung & Stundenplanung)
 
-Eine plattformunabhängige Desktop-Applikation zur Schulverwaltung, Stundenplanung und zum automatisierten Vertretungsmanagement (Jahrgangsstufen 5 bis 10).
+Desktop-Anwendung zur Verwaltung von Stundenplänen, Räumen und Vertretungen für eine Schule (Jahrgangsstufen 5 bis 10).
 
-Das System wurde im Rahmen einer 16-wöchigen Projektarbeit im Informatik-Studium entwickelt. Der Fokus lag auf einer sauberen N-Tier-Architektur, der strikten Trennung von UI und Geschäftslogik sowie der Gewährleistung von Datenintegrität in einer relationalen Datenbank.
+Entstanden als 16-wöchige Projektarbeit im Informatikstudium an der Fachhochschule Südwestfalen (Modul „Projekt“), im Zweierteam.
 
----
+## Team
 
-## 👥 Team & Architektur-Aufteilung
+- **Carlo Iuliano (@Carlo2903):** Backend und Persistenz – Datenbankmodell, JPA/Hibernate, Generic DAO, Domänenlogik (u. a. `KonfliktService`, `VertretungsService`), JUnit-Tests. Zusätzlich Unterstützung bei der Umsetzung des Frontends.
+- **Ismail Hamoud (@isham002):** Frontend – Präsentationsschicht mit JavaFX und AtlantaFX, MVVM-Struktur der Oberfläche.
 
-Die Konzeption und Implementierung erfolgte kollaborativ mit einer klaren Trennung der Architekturschichten:
+## Funktionen
 
-* **Carlo Iuliano (@Carlo2903) – Backend & Persistenz:** Relationales Datenbankdesign, ORM (Hibernate/JPA), Generic-DAOs sowie die Implementierung der zentralen Domänenlogik (KonfliktService und VertretungsService).
-* **Ismail Hamoud (@isham002) – Frontend & Client-Architektur:** Requirements Engineering, Implementierung der Präsentationsschicht (JavaFX / AtlantaFX), MVVM-Strukturierung und asynchrones Data-Binding.
+- Login mit drei Rollen: Administrator (Bearbeiten), Lehrkraft und Schüler (nur Lesen)
+- Stundenplan-Editor: Beim Anlegen einer Stunde prüft der `KonfliktService` Doppelbelegungen von Lehrkraft, Raum und Klasse sowie Wochenstunden und Sperrzeiten der Lehrkräfte und lehnt Konflikte mit einer `PlanungException` ab
+- Vertretungsverwaltung: Ausfälle markieren, Vertretungen zuweisen und löschen
+- Verwaltung von Lehrkräften, Fächern, Klassen, Räumen, Schülern und Erziehungsberechtigten
+- Schülerportal mit Anzeige des eigenen Stundenplans und markierten Vertretungen
+- Automatische Aktualisierung der Pläne im Hintergrund
 
-> **💡 Hinweis zum Repository:** Das Projekt wurde kollaborativ im Team entwickelt. Bei diesem Repository handelt es sich um meinen persönlichen Mirror, um meine Beiträge zur Backend-Architektur, Persistenzschicht und Domänenlogik für mein Portfolio unabhängig zu dokumentieren.
+## Architektur
 
----
+- **Schichten:** Oberfläche (JavaFX) → Services (Geschäftslogik) → DAOs → PostgreSQL
+- **Datenzugriff:** Generic-DAO-Pattern mit JPA/Hibernate
+- **Oberfläche:** MVVM – Views sind über JavaFX-Properties an ViewModels gebunden
+- **Passwörter:** werden als SHA-256-Hash gespeichert (ohne Salt; für einen echten Einsatz wäre ein Verfahren wie bcrypt oder Argon2 nötig)
 
-## 📸 UI & Features
+## Technische Details
 
-1. **Authentifizierungsmaske:** Modernes Interface im Flat-Design (AtlantaFX).
-2. **Interaktiver Stundenplan-Editor:** Präventives Abfangen von Doppelbelegungen (PlanungException) in Echtzeit durch den KonfliktService.
-3. **Schreibgeschütztes Schüler-Portal:** Reagiert asynchron auf Updates im Backend und signalisiert Vertretungen visuell über ein Ampelsystem.
+### Unnötige Datenbankabfragen (N+1-Problem)
+Beim Laden von Stunden, Vertretungen und Lehrkräften mit ihren verknüpften Daten hat Hibernate zunächst für jede Verknüpfung eine eigene Abfrage abgesetzt. Die betroffenen JPQL-Abfragen in den DAOs (z. B. `VertretungDao`, `LehrkraftDao`) laden die benötigten Beziehungen jetzt mit `LEFT JOIN FETCH` in einer Abfrage.
 
----
+### Aktualisierung der Oberfläche ohne Blockieren
+Der `AutoRefreshService` stößt die Aktualisierung über eine JavaFX-`Timeline` regelmäßig an. Änderungen an der Oberfläche werden mit `Platform.runLater()` auf den JavaFX Application Thread gelegt, damit keine `IllegalStateException` („Not on FX application thread“) entsteht.
 
-## 🏗 Architektur & Design Patterns
+### Gemeinsames Testen über ZeroTier
+Für Tests mit mehreren Clients auf derselben PostgreSQL-Datenbank haben wir unsere Rechner über ein ZeroTier-Netzwerk verbunden, ohne einen Server mieten zu müssen.
 
-* **Backend (N-Tier & ORM):** Strikte Schichtenarchitektur. Die Datenzugriffsschicht nutzt das Generic-DAO-Pattern in Kombination mit JPA/Hibernate zur Kapselung von SQL-Abfragen und sauberen Transaktionssteuerung.
-* **Frontend (MVVM):** Reaktive Architektur mit JavaFX. Ansichten sind über Properties (ObservableList) an ViewModels gekoppelt. UI-Komponenten sind vollständig von der Domänenlogik entkoppelt.
-* **IT-Sicherheit:** Benutzerpasswörter werden kryptografisch per SHA-256 gehasht. Das Rollenkonzept (Admin, Lehrer, Schüler) verhindert das Laden administrativer CRUD-Masken auf Speicherebene, wenn der Nutzer nur über Lesezugriff verfügt (Security by Design).
+## Tech-Stack
 
----
+- Java 21, JavaFX 21, AtlantaFX
+- JPA / Hibernate, PostgreSQL
+- Maven (Wrapper), JUnit
+- ZeroTier (nur für Tests im Team)
 
-## 🧠 Technische Herausforderungen & Implementierungsdetails
+## Lokales Setup
 
-### 1. ORM-Optimierung (N+1 Select Problem)
-Das Ladeverhalten von Hibernate führte bei stark verknüpften Entitäten (Stunde, Lehrkraft, Raum) zunächst zu Performance-Einbußen durch das N+1-Select-Problem. Durch gezieltes Refactoring der JPQL-Abfragen auf LEFT JOIN FETCH werden relationale Abhängigkeiten atomar und effizient in einem einzigen SQL-Statement geladen.
+**Voraussetzungen:** JDK 21, PostgreSQL (der Dump wurde mit PostgreSQL 18 erstellt; ab Version 17 läuft er ohne Warnungen)
 
-### 2. Verteiltes Integrationstesting via SDN (ZeroTier)
-Um komplexe Kaskadierungseffekte (z. B. das Löschen einer Lehrkraft samt verknüpfter Vertretungsstunden) und den automatischen UI-Refresh realitätsnah zu testen, wurde ein verschlüsseltes Peer-to-Peer-VPN über ZeroTier eingerichtet. Dies ermöglichte ein effizientes Integrationstesting unter echten Client-Server-Bedingungen auf einer gemeinsamen PostgreSQL-Instanz ohne externe Hosting-Kosten.
-
-### 3. Asynchrone Thread-Synchronisation im UI
-Zeitintensive Datenaktualisierungen dürfen den JavaFX Application Thread nicht blockieren. Zur automatisierten Aktualisierung der Stundenpläne wurde ein AutoRefreshService auf Basis der Java-Timeline implementiert. Dieser lagert Abfragen asynchron aus und reiht UI-Updates mittels Platform.runLater() thread-sicher ein, um NotOnFxApplicationThreadException-Fehler zu verhindern.
-
----
-
-## 🛠 Tech-Stack
-
-* **Backend:** Java (JDK 21), JPA / Hibernate (ORM), PostgreSQL
-* **Frontend:** JavaFX (v21.0.6), AtlantaFX (v2.1.0)
-* **Tools & Infrastruktur:** Maven (Wrapper), JUnit (Testing), ZeroTier One (SDN)
-
----
-
-## ⚙️ Lokales Setup & Testing
-
-### 📋 Voraussetzungen
-* Java JDK 21 installiert und in Umgebungsvariablen (JAVA_HOME) gesetzt.
-* PostgreSQL lokal installiert und aktiv.
-
-### 🛠 Installation & Start
-
-1. Repository klonen:
+1. Repository klonen
+   ```bash
    git clone https://github.com/Carlo2903/RaumVerwaltung.git
    cd RaumVerwaltung
+   ```
+2. Datenbank anlegen und Testdaten einspielen
+   ```bash
+   createdb -U postgres schulverwaltung
+   psql -U postgres -d schulverwaltung -f database/schulverwaltung_dump.sql
+   ```
+   Die Testdaten (Namen, Adressen, Kontaktdaten) sind frei erfunden.
+3. Zugangsdaten in `src/main/resources/META-INF/persistence.xml` eintragen
+4. Tests ausführen
+   ```bash
+   ./mvnw test          # Windows: mvnw.cmd test
+   ```
+5. Anwendung starten
+   ```bash
+   ./mvnw clean javafx:run          # Windows: mvnw.cmd clean javafx:run
+   ```
 
-2. Datenbank initialisieren (PostgreSQL):
-   * Lokale Datenbank namens schulverwaltung anlegen.
-   * Schema ausführen: database/01_schema.sql
-   * Testdaten einspielen: database/02_data.sql
-   * JDBC-Zugangsdaten in der Hibernate-Konfiguration anpassen: src/main/resources/META-INF/persistence.xml
+Ohne Dump legt Hibernate die Tabellen beim Start selbst an (`hbm2ddl.auto=update`). Dann existiert nur das Admin-Konto, das die Anwendung automatisch erstellt.
 
-3. Automatisierte Tests ausführen (JUnit):
-   * Windows: mvnw.cmd test
-   * Linux / macOS: ./mvnw test
+## Testkonten (aus dem Dump)
 
-4. Anwendung starten:
-   * Windows: mvnw.cmd clean javafx:run
-   * Linux / macOS: ./mvnw clean javafx:run
-
----
-
-## 🔑 Login-Daten für die Testumgebung
-
-Im SQL-Skript (02_data.sql) sind folgende Test-Accounts hinterlegt:
-
-* Administrator: Benutzername: admin | Passwort: admin123
-* Lehrkraft (Lesezugriff): Benutzername: krz | Passwort: lehrer123
-* Schüler (Lesezugriff): Benutzername: 5b | Passwort: schueler123
-
----
-
-## 📄 Lizenz
-Dieses Projekt ist unter der MIT-Lizenz lizenziert. Weitere Details finden sich in der LICENSE-Datei.
+| Rolle | Benutzername | Passwort |
+| --- | --- | --- |
+| Administrator | `admin` | `admin123` |
+| Lehrkraft | `krz` | `lehrer123` |
+| Schüler (Klasse 5b) | `5b` | `schueler123` |
